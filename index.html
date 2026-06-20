@@ -3,1095 +3,1413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox Broker Regulado - Simulador trii</title>
-    <!-- Tailwind CSS para el diseño moderno -->
+    <title>Simulador de Trii - Bolsa de Valores de Lima</title>
+    <!-- Tailwind CSS para diseño moderno y ultra-rápido -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome para los íconos de la aplicación -->
+    <!-- FontAwesome para los iconos fieles a la aplicación original -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts - Inter para una tipografía limpia -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 
+      ======================================================================
+      BLOQUE 1: CONFIGURACIÓN DE COLORES Y ESTILOS PERSONALIZADOS (CSS)
+      Aquí puedes alterar la paleta de colores de la aplicación móvil.
+      ======================================================================
+    -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117;
-        }
-        /* Custom styles matching trii brand and screenshots */
-        .trii-green { color: #00c271; }
-        .trii-bg-green { background-color: #00c271; }
-        .trii-bg-green-hover:hover { background-color: #00a862; }
-        .trii-dark-bg { background-color: #0b0e14; }
-        .trii-card-bg { background-color: #12161f; }
-        .trii-border-gray { border-color: #222b3c; }
-        .trii-text-muted { color: #848e9c; }
-        
-        /* Custom scrollbar for simulator */
-        .custom-scroll::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #0b0e14;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #222b3c;
-            border-radius: 4px;
+        /* Paleta oficial aproximada de Trii */
+        :root {
+            --trii-bg-dark: #0d1310;       /* Fondo oscuro principal de la app */
+            --trii-card-dark: #141c18;     /* Tarjetas y campos de texto */
+            --trii-green-primary: #11ce65; /* Verde brillante de marca */
+            --trii-green-dark: #004d2a;    /* Verde para estados complementarios */
+            --trii-gray-text: #8e9a94;     /* Gris para descripciones */
+            --trii-border: #1f2c25;        /* Bordes finos de las tarjetas */
         }
 
-        /* Smooth slide-up animations for sheets */
-        .bottom-sheet {
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateY(100%);
+        .trii-app-bg { background-color: var(--trii-bg-dark); }
+        .trii-card { background-color: var(--trii-card-dark); }
+        .trii-text-primary { color: var(--trii-green-primary); }
+        .trii-bg-primary { background-color: var(--trii-green-primary); }
+        .trii-border-color { border-color: var(--trii-border); }
+
+        /* Ocultar barra de scroll en los elementos con carrusel horizontal */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animación para serpentina de confeti interactiva */
+        @keyframes fall-confetti {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(450px) rotate(360deg); opacity: 0; }
         }
-        .bottom-sheet.active {
-            transform: translateY(0);
+        .confetti-piece {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 14px;
+            border-radius: 3px;
+            animation: fall-confetti 3s ease-out infinite;
+            z-index: 10;
         }
-        
-        /* iPhone notch & chassis */
-        .iphone-frame {
-            border: 12px solid #2d3748;
-            border-radius: 45px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+        /* Animación de líneas y lazos curvados imitando el video de César */
+        @keyframes RibbonFlow {
+            0% { stroke-dashoffset: 1000; opacity: 0; }
+            50% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 0; }
+        }
+        .ribbon-svg {
+            position: absolute;
+            top: 15%;
+            left: 5%;
+            width: 90%;
+            height: 60%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .ribbon-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: RibbonFlow 4s ease-out infinite;
         }
     </style>
 </head>
-<body class="text-white min-h-screen flex flex-col lg:flex-row p-4 lg:p-8 gap-8 justify-center items-stretch">
+<body class="bg-slate-900 text-white min-h-screen font-sans">
 
-    <!-- PANEL DEL PROFESOR (Izquierda) -->
-    <div class="w-full lg:w-[450px] bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-2xl">
-        <div>
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <i class="fa-solid fa-graduation-cap text-emerald-400 text-xl"></i>
+    <!-- Contenedor general flexible (Dashboard de doble columna) -->
+    <div class="flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- 
+          ======================================================================
+          BLOQUE 2: PANEL DEL DOCENTE / GUÍA METODOLÓGICA (COLUMNA IZQUIERDA)
+          Sección teórica para guiar tus clases. Puedes ajustar o añadir notas 
+          pedagógicas para tus alumnos directamente en este bloque HTML.
+          ======================================================================
+        -->
+        <div class="w-full lg:w-5/12 bg-slate-800 p-6 lg:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-700">
+            <div>
+                <!-- Encabezado pedagógico -->
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="bg-emerald-500 p-2.5 rounded-lg text-slate-900">
+                        <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-emerald-400 font-bold tracking-widest uppercase">Herramienta Didáctica</span>
+                        <h1 class="text-2xl font-black text-white">Guía de Inversión en Bolsa</h1>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-extrabold tracking-tight">Panel del Docente</h1>
-                    <p class="text-xs text-slate-400">Sandbox para enseñar inversiones reguladas</p>
+
+                <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                    Esta herramienta simula de forma interactiva la compra de acciones y fondos en la **Bolsa de Valores de Lima (BVL)** usando la plataforma **trii**. Diseñado especialmente para clases de Finanzas y Mercado de Capitales.
+                </p>
+
+                <!-- Acordeón / Tarjetas conceptuales -->
+                <div class="space-y-4">
+                    <!-- Concepto 1: Configurar Alumno -->
+                    <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                        <h3 class="font-bold text-white text-sm flex items-center mb-1">
+                            <i class="fa-solid fa-user-edit text-emerald-400 mr-2"></i>
+                            Personalizar Inversionista
+                        </h3>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Puedes configurar el nombre de tu alumno en el campo de abajo para que la pantalla de confirmación diga <strong>"¡Felicidades [Nombre]!"</strong> igual que en el video de trii.
+                        </p>
+                        <input type="text" id="profesor-nombre-alumno" value="Cesar" oninput="actualizarNombreAlumno()" class="w-full mt-2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Nombre del alumno (ej: Cesar)">
+                    </div>
+
+                    <!-- Concepto 2: Comisiones de Bolsa -->
+                    <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                        <h3 class="font-bold text-white text-sm flex items-center mb-1">
+                            <i class="fa-solid fa-calculator text-emerald-400 mr-2"></i>
+                            Análisis del Costo Total
+                        </h3>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Observa que al comprar a mercado, la aplicación calcula de inmediato la comisión mínima (S/ 12.50). Con la nueva **Pantalla intermedia de previsualización de orden**, los alumnos entenderán el monto exacto antes de que el dinero sea debitado.
+                        </p>
+                    </div>
+
+                    <!-- Concepto 3: Condiciones de Mercado -->
+                    <div class="bg-slate-700/50 p-4 rounded-xl border border-slate-600">
+                        <h3 class="font-bold text-white text-sm flex items-center mb-1">
+                            <i class="fa-solid fa-clock text-emerald-400 mr-2"></i>
+                            Condiciones Reguladas
+                        </h3>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            En la pantalla de resumen se muestra el aviso de "Condiciones de la orden" reguladas, advirtiendo que la orden de mercado se calza al mejor precio disponible y que puede completarse de forma total, parcial o ser cancelada por liquidez.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Paso a Paso Pedagógico -->
-            <div class="space-y-4 my-6">
-                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                    <span class="text-xs font-bold uppercase text-emerald-400 tracking-wider">Paso Actual del Alumno:</span>
-                    <h2 id="current-step-title" class="text-base font-semibold mt-1">1. Exploración del Portafolio & Fondeo</h2>
-                    <p id="current-step-desc" class="text-sm text-slate-400 mt-2 leading-relaxed">
-                        Muestra a los alumnos la pantalla principal de un broker regulado en Perú (trii / SAB). Enseña la diferencia entre el saldo invertido y el "Saldo Disponible" para comprar. Explica cómo la recarga de saldo se hace mediante transferencias bancarias locales (como BCP) asociadas al mismo titular.
-                    </p>
-                </div>
-
-                <!-- Tarjeta de Concepto Regulado Clave -->
-                <div class="bg-emerald-950/20 p-4 rounded-2xl border border-emerald-900/30">
-                    <h3 class="text-xs font-bold text-emerald-400 flex items-center gap-2">
-                        <i class="fa-solid fa-shield-halved"></i> CONCEPTO CLAVE PARA EXPLICAR:
-                    </h3>
-                    <p id="concept-text" class="text-xs text-emerald-300/90 mt-2 leading-relaxed">
-                        <strong>Sociedad Agente de Bolsa (SAB):</strong> El dinero del inversionista va a una cuenta del broker autorizada por la SMV (Superintendencia del Mercado de Valores). El depósito debe ser desde una cuenta del mismo titular para prevenir lavado de activos.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- Acciones rápidas para el Profesor -->
-            <div class="space-y-2">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Atajos de navegación rápida:</p>
+            <!-- Controles rápidos para el docente -->
+            <div class="mt-8 pt-6 border-t border-slate-700">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Atajos del Simulador</h4>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="goToState('home')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-medium text-left flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. Pantalla Inicio
+                    <button onclick="cambiarTab('home')" class="bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-3 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-house mr-1"></i> Pantalla Inicio
                     </button>
-                    <button onclick="goToState('assetDetail')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-medium text-left flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span> 2. Ficha CREDITC1
+                    <button onclick="cambiarTab('invertir')" class="bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-3 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i> Pantalla Invertir
                     </button>
-                    <button onclick="goToState('orderType')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-medium text-left flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-purple-500"></span> 3. Tipo de Orden
+                    <button onclick="abrirCompraConDetalle('CREDITC1', 5.60, 'BANCO CRÉDITO DEL PERÚ')" class="bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-3 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-bolt mr-1"></i> Comprar BCP
                     </button>
-                    <button onclick="goToState('orderMarket')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-medium text-left flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. Configurar Orden
+                    <button onclick="reiniciarSimulador()" class="bg-rose-900/40 hover:bg-rose-900 text-rose-200 font-medium py-2 px-3 rounded-lg text-xs transition border border-rose-800">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Resetear Todo
                     </button>
+                </div>
+                <div class="mt-4 text-center">
+                    <span class="text-[11px] text-slate-500">Sandbox pedagógico de la Bolsa de Valores de Lima.</span>
                 </div>
             </div>
         </div>
 
-        <!-- Indicador de Control y Reset -->
-        <div class="pt-6 border-t border-slate-800 mt-6 flex gap-2 items-center">
-            <button onclick="resetSimulator()" class="w-full py-3 bg-slate-800 hover:bg-red-950 hover:text-red-300 transition-colors rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                <i class="fa-solid fa-rotate-left"></i> Reiniciar Simulación
-            </button>
-        </div>
-    </div>
-
-    <!-- CONTENEDOR DEL MOCKUP IPHONE (Derecha) -->
-    <div class="flex-grow flex items-center justify-center">
-        <!-- Chasis del Teléfono -->
-        <div class="iphone-frame relative w-[375px] h-[812px] bg-black overflow-hidden flex flex-col select-none">
-            
-            <!-- Barra de estado del iPhone -->
-            <div class="absolute top-0 left-0 right-0 h-11 px-6 flex justify-between items-center text-white text-xs z-50 pointer-events-none">
-                <span id="iphone-time" class="font-semibold">10:35</span>
-                <!-- Notch / Dynamic Island -->
-                <div class="w-28 h-6 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-2"></div>
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-signal"></i>
-                    <span class="font-bold text-[9px] bg-slate-800 px-1 rounded">LTE</span>
-                    <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
-                    <span class="text-[10px]">79%</span>
+        <!-- 
+          ======================================================================
+          BLOQUE 3: EL MOCKUP DEL CELULAR (COLUMNA DERECHA)
+          Contenedor de interfaz de iPhone con barra de estado, barra de navegación 
+          inferior y pantallas intercambiables mediante Javascript.
+          ======================================================================
+        -->
+        <div class="w-full lg:w-7/12 flex items-center justify-center p-4 bg-slate-950">
+            <!-- Marco físico del iPhone simulado -->
+            <div class="relative w-full max-w-[390px] h-[820px] rounded-[50px] border-[10px] border-slate-800 bg-black shadow-2xl flex flex-col overflow-hidden">
+                
+                <!-- Barra de Estado Superior del Celular (Batería, Hora, Red) -->
+                <div class="absolute top-0 left-0 w-full h-11 bg-transparent flex justify-between items-center px-8 z-50 pointer-events-none">
+                    <span class="text-xs font-bold text-white" id="reloj-celular">10:35</span>
+                    <!-- Cámara frontal / Isla dinámica ficticia -->
+                    <div class="w-28 h-4.5 bg-black rounded-full mx-auto"></div>
+                    <div class="flex items-center space-x-1.5">
+                        <i class="fa-solid fa-signal text-[10px] text-white"></i>
+                        <span class="text-[10px] font-bold text-white">LTE</span>
+                        <i class="fa-solid fa-battery-three-quarters text-xs text-white"></i>
+                    </div>
                 </div>
-            </div>
 
-            <!-- PANTALLA DE LA APLICACIÓN (Mismo estilo que trii) -->
-            <div id="iphone-screen" class="trii-dark-bg w-full h-full pt-11 flex flex-col relative text-white">
-
-                <!-- PANTALLA 1: INICIO (photo_5024143423518215478_y.jpg) -->
-                <div id="screen-home" class="flex-grow flex flex-col h-full overflow-y-auto custom-scroll">
-                    <!-- Top bar con Estado "Abierto" -->
-                    <div class="px-5 pt-4 pb-2 flex justify-between items-center">
-                        <span class="text-xs flex items-center gap-1.5 text-emerald-400 font-medium">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Abierto
-                        </span>
-                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-bell text-slate-300"></i>
+                <!-- 
+                  ==============================================================
+                  PANTALLA A: INICIO / INVERSIÓN (Home)
+                  ==============================================================
+                -->
+                <div id="pantalla-home" class="flex-1 flex flex-col trii-app-bg pt-12 pb-24 overflow-y-auto no-scrollbar">
+                    
+                    <!-- Header con Buscador "¿En qué invertir hoy?" y Menú de Hamburguesa -->
+                    <div class="px-5 pt-3 mb-4 flex items-center space-x-3">
+                        <button onclick="cambiarTab('invertir')" class="text-white hover:text-emerald-400 text-sm">
+                            <i class="fa-solid fa-bars text-lg"></i>
+                        </button>
+                        <div onclick="cambiarTab('invertir')" class="flex-1 bg-[#141c18] border border-[#1f2c25] rounded-xl py-2 px-3 flex items-center space-x-2 cursor-pointer hover:bg-[#1a2420] transition">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <span class="text-xs text-slate-400">¿En qué invertir hoy?</span>
+                        </div>
+                        <div class="flex items-center space-x-1 bg-emerald-950 px-2 py-1 rounded-full border border-emerald-800/50">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                            <span class="text-[9px] text-emerald-400 font-bold">Abierto</span>
                         </div>
                     </div>
 
-                    <!-- Buscador e Ícono de Menú -->
-                    <div class="px-5 py-2 flex gap-3 items-center">
-                        <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 cursor-pointer">
-                            <i class="fa-solid fa-bars"></i>
-                        </div>
-                        <div onclick="goToState('assetDetail')" class="flex-grow bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 flex items-center gap-2 text-slate-500 text-xs cursor-pointer hover:border-slate-700 transition-colors">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <span>¿En qué invertir hoy?</span>
-                        </div>
-                    </div>
-
-                    <!-- Logo de la marca (El arbolito característico) -->
-                    <div class="flex justify-center py-3">
-                        <!-- SVG del árbol de trii -->
-                        <svg class="w-10 h-10 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2L4 12h5v8h6v-8h5L12 2zm0 3.3l4.5 5.7h-2.5v8h-4v-8H7.5L12 5.3z" opacity="0.3"/>
-                            <path d="M12 3l-6 7h4v8h4v-8h4l-6-7z"/>
-                        </svg>
-                    </div>
-
-                    <!-- Selector de Moneda (Soles / Dólares) -->
-                    <div class="flex justify-center my-1">
-                        <div class="bg-slate-900 border border-slate-800 p-1 rounded-full flex gap-1">
-                            <button id="btn-currency-soles" onclick="switchCurrency('Soles')" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-slate-950 transition-colors">Soles</button>
-                            <button id="btn-currency-dolares" onclick="switchCurrency('Dolares')" class="px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 transition-colors">Dólares</button>
+                    <!-- Selector de Divisas: Soles / Dólares -->
+                    <div class="px-5 mb-4">
+                        <div class="bg-[#141c18] p-1 rounded-full flex justify-between">
+                            <button id="btn-divisa-soles" onclick="cambiarDivisa('Soles')" class="w-1/2 py-1.5 rounded-full text-xs font-bold bg-emerald-500 text-slate-900 transition">
+                                Soles
+                            </button>
+                            <button id="btn-divisa-dolares" onclick="cambiarDivisa('Dolares')" class="w-1/2 py-1.5 rounded-full text-xs font-bold text-slate-400 transition">
+                                Dólares
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Saldos Informativos -->
-                    <div class="text-center py-4">
-                        <span class="text-xs text-slate-400 font-medium">Total</span>
-                        <div class="flex items-center justify-center gap-2 mt-1">
-                            <h2 id="home-total-balance" class="text-3xl font-extrabold tracking-tight">S/ 3,646.66</h2>
-                            <i class="fa-solid fa-eye-slash text-slate-500 text-sm cursor-pointer"></i>
+                    <!-- Cuadro de Balance Total -->
+                    <div class="px-5 mb-5 text-center">
+                        <span class="text-xs text-slate-400 block mb-1">Total invertido + disponible</span>
+                        <div class="flex justify-center items-center space-x-2">
+                            <span id="txt-balance-total" class="text-3xl font-bold tracking-tight text-white">S/ 3,646.66</span>
+                            <button onclick="toggleOcultarSaldo()" class="text-slate-400 hover:text-white transition">
+                                <i id="icono-ojo-saldo" class="fa-solid fa-eye text-sm"></i>
+                            </button>
                         </div>
-                        <p class="text-xs text-slate-400 mt-2 font-medium">Disponible <span id="home-available-balance" class="text-white">S/ 2,045.06</span></p>
+                        <div class="mt-2 bg-emerald-500/10 inline-block px-3 py-1 rounded-full text-[11px] text-emerald-400">
+                            Disponible: <span id="txt-balance-disponible" class="font-bold">S/ 2,045.06</span>
+                        </div>
                     </div>
 
-                    <!-- Botonera de Acciones (Deposita, Retira, Cambia, Rentar) -->
-                    <div class="grid grid-cols-4 gap-2 px-4 py-3 text-center">
-                        <!-- Botón Deposita -->
-                        <div class="flex flex-col items-center cursor-pointer" onclick="openDepositMock()">
-                            <div class="w-12 h-12 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-lg font-bold hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-arrow-up"></i>
+                    <!-- Fila de Acciones Rápidas (Depositar, Retirar, Cambiar, Rentar) -->
+                    <div class="grid grid-cols-4 gap-2 px-5 mb-6 text-center">
+                        <div class="flex flex-col items-center">
+                            <button class="w-12 h-12 rounded-full trii-card flex items-center justify-center text-emerald-400 border border-[#1f2c25] hover:bg-emerald-500/10 transition">
+                                <i class="fa-solid fa-arrow-up text-sm"></i>
+                            </button>
+                            <span class="text-[10px] text-slate-400 mt-2 font-medium">Deposita</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <button class="w-12 h-12 rounded-full trii-card flex items-center justify-center text-emerald-400 border border-[#1f2c25] hover:bg-emerald-500/10 transition">
+                                <i class="fa-solid fa-arrow-down text-sm"></i>
+                            </button>
+                            <span class="text-[10px] text-slate-400 mt-2 font-medium">Retira</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <button class="w-12 h-12 rounded-full trii-card flex items-center justify-center text-emerald-400 border border-[#1f2c25] hover:bg-emerald-500/10 transition">
+                                <i class="fa-solid fa-right-left text-xs"></i>
+                            </button>
+                            <span class="text-[10px] text-slate-400 mt-2 font-medium">Cambia</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <button class="w-12 h-12 rounded-full trii-card flex items-center justify-center text-emerald-400 border border-[#1f2c25] hover:bg-emerald-500/10 transition">
+                                <i class="fa-solid fa-piggy-bank text-xs"></i>
+                            </button>
+                            <span class="text-[10px] text-slate-400 mt-2 font-medium">Rentar saldo</span>
+                        </div>
+                    </div>
+
+                    <!-- Resumen del Portafolio Actual -->
+                    <div class="px-5 mb-5">
+                        <div class="trii-card p-4 rounded-2xl border border-[#1f2c25]">
+                            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Mi Portafolio</span>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs font-semibold text-white">Acciones y ETFs</span>
+                                <span id="txt-valor-acciones" class="text-sm font-bold text-white">S/ 1,601.60</span>
                             </div>
-                            <span class="text-[11px] mt-2 font-medium">Deposita</span>
-                        </div>
-                        <!-- Botón Retira -->
-                        <div class="flex flex-col items-center opacity-70">
-                            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-lg hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-arrow-down text-slate-300"></i>
-                            </div>
-                            <span class="text-[11px] mt-2 font-medium">Retira</span>
-                        </div>
-                        <!-- Botón Cambia -->
-                        <div class="flex flex-col items-center opacity-70">
-                            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-lg hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-arrows-up-down text-slate-300"></i>
-                            </div>
-                            <span class="text-[11px] mt-2 font-medium">Cambia</span>
-                        </div>
-                        <!-- Botón Rentar -->
-                        <div class="flex flex-col items-center opacity-70">
-                            <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-lg hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-piggy-bank text-slate-300"></i>
-                            </div>
-                            <span class="text-[11px] mt-2 font-medium text-ellipsis overflow-hidden whitespace-nowrap w-full">Rentar saldo</span>
                         </div>
                     </div>
 
-                    <!-- Distribución de Activos -->
-                    <div class="mx-5 my-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex justify-between items-center">
-                        <div>
-                            <span class="text-xs text-slate-400">Acciones y ETFs</span>
-                            <p id="home-portfolio-value" class="text-sm font-bold mt-0.5">S/ 1,601.60</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
-                    </div>
-
-                    <!-- Banner de la Copa Trii -->
-                    <div class="mx-5 my-2 rounded-2xl bg-gradient-to-r from-emerald-950 to-slate-950 border border-emerald-900/40 p-4 flex gap-4 items-center">
-                        <div class="bg-emerald-500/10 p-2 rounded-xl text-center">
-                            <span class="text-xs font-bold text-emerald-400 block">COPA</span>
-                            <span class="text-[9px] text-slate-400 block">FONDOS</span>
-                        </div>
-                        <div class="flex-grow">
-                            <h4 class="text-xs font-bold">¡Nueva Copa de Inversión!</h4>
-                            <p class="text-[10px] text-slate-400">Premia la constancia y la disciplina de invertir.</p>
-                        </div>
-                    </div>
-
-                    <!-- Acceso a Ficha de CREDITC1 simulado -->
-                    <div class="px-5 py-4 mt-auto">
-                        <p class="text-xs text-slate-400 font-medium mb-3">Tus Favoritos</p>
-                        <div onclick="goToState('assetDetail')" class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex justify-between items-center cursor-pointer hover:border-emerald-500/40 transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-xs font-bold text-sky-400 border border-slate-700">
+                    <!-- Sección "¿Dónde invertir tu plata?" en Home -->
+                    <div class="px-5 flex-1">
+                        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">Recomendado para ti</h3>
+                        
+                        <!-- Tarjeta interactiva de la Acción principal CREDITC1 (Banco de Crédito del Perú) -->
+                        <div onclick="abrirCompraConDetalle('CREDITC1', 5.60, 'BANCO CRÉDITO DEL PERÚ')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-[#002A8F] text-xs">
                                     BCP
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold">CREDITC1</h4>
-                                    <p class="text-[10px] text-slate-400">Credicorp Capital Perú</p>
+                                    <h4 class="text-xs font-bold text-white">CREDITC1</h4>
+                                    <span class="text-[10px] text-slate-400">Banco de Crédito del Perú</span>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm font-bold">S/ 6.50</p>
-                                <p class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> +0.31%</p>
+                                <span class="text-xs font-black text-white block">S/ 5.60</span>
+                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-caret-up mr-0.5"></i> +0.45%</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Nav del iPhone -->
-                    <div class="mt-auto border-t border-slate-900 bg-slate-950/80 px-4 py-3 flex justify-between items-center text-center">
-                        <div class="flex flex-col items-center flex-1 text-emerald-400">
-                            <i class="fa-solid fa-house text-sm"></i>
-                            <span class="text-[9px] mt-1 font-medium">Inicio</span>
-                        </div>
-                        <div onclick="goToState('assetDetail')" class="flex flex-col items-center flex-1 text-slate-500 cursor-pointer">
-                            <i class="fa-solid fa-magnifying-glass text-sm"></i>
-                            <span class="text-[9px] mt-1 font-medium">Invertir</span>
-                        </div>
-                        <div class="flex-1 flex justify-center -mt-6">
-                            <div class="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-slate-950 border-4 border-slate-950 shadow-lg shadow-emerald-500/20">
-                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2L4 12h5v8h6v-8h5L12 2z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-center flex-1 text-slate-500 opacity-60">
-                            <i class="fa-solid fa-arrow-right-arrow-left text-sm"></i>
-                            <span class="text-[9px] mt-1 font-medium">Movimientos</span>
-                        </div>
-                        <div class="flex flex-col items-center flex-1 text-slate-500 opacity-60">
-                            <i class="fa-solid fa-chart-pie text-sm"></i>
-                            <span class="text-[9px] mt-1 font-medium">Portafolio</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- PANTALLA 2: FICHA DE ACTIVO & CONFIGURAR COMPRA -->
-                <div id="screen-detail" class="hidden flex-grow flex flex-col h-full overflow-y-auto custom-scroll relative">
-                    <!-- Cabecera de Ficha -->
-                    <div class="px-5 py-3 flex justify-between items-center border-b border-slate-900 bg-slate-950/40 sticky top-0 z-10">
-                        <button onclick="goToState('home')" class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center hover:bg-slate-800">
-                            <i class="fa-solid fa-chevron-left text-sm"></i>
+                <!-- 
+                  ==============================================================
+                  PANTALLA B: PANTALLA "INVERTIR" (BUSCADOR Y CATEGORÍAS)
+                  Esta pantalla soporta ahora cambio dinámico entre pestañas.
+                  ==============================================================
+                -->
+                <div id="pantalla-invertir" class="hidden flex-1 flex flex-col trii-app-bg pt-12 pb-24 overflow-y-auto no-scrollbar">
+                    
+                    <!-- Campo de búsqueda superior de Invertir -->
+                    <div class="px-5 pt-3 mb-4">
+                        <div class="bg-[#141c18] border border-[#1f2c25] rounded-xl py-2.5 px-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <input type="text" placeholder="¿En qué invertir hoy?" class="bg-transparent text-xs text-white focus:outline-none w-full" disabled value="¿En qué invertir hoy?">
+                        </div>
+                    </div>
+
+                    <!-- Pestañas (Descubre, Acciones, Fondos) Interactivas -->
+                    <div class="px-5 border-b border-[#1f2c25] flex justify-between text-xs mb-5">
+                        <button id="pestaña-descubre" onclick="cambiarSubPestaña('descubre')" class="pb-2 border-b-2 border-emerald-400 text-white font-bold w-1/3 text-center">Descubre</button>
+                        <button id="pestaña-acciones" onclick="cambiarSubPestaña('acciones')" class="pb-2 text-slate-400 hover:text-white transition w-1/3 text-center">Acciones</button>
+                        <button id="pestaña-fondos" onclick="cambiarSubPestaña('fondos')" class="pb-2 text-slate-400 hover:text-white transition w-1/3 text-center">Fondos</button>
+                    </div>
+
+                    <!-- SUB-PÁGINA: DESCUBRE (Carruseles combinados) -->
+                    <div id="sub-descubre" class="space-y-6">
+                        <!-- Carrusel de Acciones en Descubre -->
+                        <div class="px-5">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-bold text-white">Acciones</h3>
+                                <span onclick="cambiarSubPestaña('acciones')" class="text-xs text-emerald-400 hover:underline cursor-pointer font-semibold">Ver más</span>
+                            </div>
+                            
+                            <div class="flex overflow-x-auto no-scrollbar gap-3 pb-2">
+                                <!-- CREDITC1 Card -->
+                                <div onclick="abrirCompraConDetalle('CREDITC1', 5.60, 'BANCO CRÉDITO DEL PERÚ')" class="min-w-[125px] trii-card p-3 rounded-2xl border border-[#1f2c25] text-center flex flex-col items-center justify-between cursor-pointer hover:border-emerald-500/50 transition">
+                                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2 overflow-hidden shadow">
+                                        <span class="text-[10px] font-black text-[#002A8F]">BCP</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-white block">CREDITC1</span>
+                                        <span class="text-[10px] text-emerald-400 font-bold">0.45%</span>
+                                    </div>
+                                </div>
+                                <!-- FERREYC1 Card -->
+                                <div onclick="abrirCompraConDetalle('FERREYC1', 2.50, 'FERREYCORP S.A.A.')" class="min-w-[125px] trii-card p-3 rounded-2xl border border-[#1f2c25] text-center flex flex-col items-center justify-between cursor-pointer hover:border-emerald-500/50 transition">
+                                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-2 overflow-hidden shadow p-1">
+                                        <span class="text-[8px] font-bold text-green-800 leading-none">ferreycorp</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-white block">FERREYC1</span>
+                                        <span class="text-[10px] text-emerald-400 font-bold">0.49%</span>
+                                    </div>
+                                </div>
+                                <!-- AUNA Card -->
+                                <div onclick="abrirCompraConDetalle('AUNA', 3.20, 'AUNA S.A.')" class="min-w-[125px] trii-card p-3 rounded-2xl border border-[#1f2c25] text-center flex flex-col items-center justify-between cursor-pointer hover:border-emerald-500/50 transition">
+                                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-2 overflow-hidden shadow">
+                                        <span class="text-[10px] font-black text-sky-500 tracking-tighter">auna</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-white block">AUNA</span>
+                                        <span class="text-[10px] text-emerald-400 font-bold">2.14%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Carrusel de Fondos en Descubre -->
+                        <div class="px-5">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-bold text-white">Fondos Mutuos</h3>
+                                <span onclick="cambiarSubPestaña('fondos')" class="text-xs text-emerald-400 hover:underline cursor-pointer font-semibold">Ver más</span>
+                            </div>
+                            
+                            <div class="flex overflow-x-auto no-scrollbar gap-4 pb-2">
+                                <div class="min-w-[90px] flex flex-col items-center text-center cursor-pointer">
+                                    <div class="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-md mb-2">B</div>
+                                    <span class="text-[9px] text-slate-300 font-semibold leading-tight">Blum Cash Dólares</span>
+                                    <span class="text-[9px] text-emerald-400 font-bold mt-0.5">3.74% E.A.</span>
+                                </div>
+                                <div class="min-w-[90px] flex flex-col items-center text-center cursor-pointer">
+                                    <div class="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold text-md mb-2">B</div>
+                                    <span class="text-[9px] text-slate-300 font-semibold leading-tight">Blum Cash Soles</span>
+                                    <span class="text-[9px] text-emerald-400 font-bold mt-0.5">3.35% E.A.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 
+                      SUB-PÁGINA: ACCIONES (NUEVO: LISTA REQUERIDA DE ACCIONES: BCP, FERREYCORP, BBVA, ALICORP, BACKUS)
+                    -->
+                    <div id="sub-acciones" class="hidden px-5 space-y-3">
+                        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Lista de Acciones BVL</h3>
+                        
+                        <!-- 1. BCP -->
+                        <div onclick="abrirCompraConDetalle('CREDITC1', 5.60, 'BANCO CRÉDITO DEL PERÚ')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-black text-[#002A8F] text-xs">BCP</div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">CREDITC1</h4>
+                                    <span class="text-[10px] text-slate-400">Banco de Crédito del Perú</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-white block">S/ 5.60</span>
+                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-caret-up"></i> +0.45%</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Ferreycorp -->
+                        <div onclick="abrirCompraConDetalle('FERREYC1', 2.50, 'FERREYCORP S.A.A.')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 overflow-hidden">
+                                    <span class="text-[7px] font-bold text-green-800 leading-none text-center">ferreycorp</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">FERREYC1</h4>
+                                    <span class="text-[10px] text-slate-400">Ferreycorp S.A.A.</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-white block">S/ 2.50</span>
+                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-caret-up"></i> +0.49%</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. BBVA -->
+                        <div onclick="abrirCompraConDetalle('BBVAC1', 3.10, 'BBVA PERÚ')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white font-black text-[9px]">BBVA</div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">BBVAC1</h4>
+                                    <span class="text-[10px] text-slate-400">BBVA Banco Continental</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-white block">S/ 3.10</span>
+                                <span class="text-[10px] text-rose-400 font-bold"><i class="fa-solid fa-caret-down"></i> -0.15%</span>
+                            </div>
+                        </div>
+
+                        <!-- 4. Alicorp -->
+                        <div onclick="abrirCompraConDetalle('ALICORC1', 5.80, 'ALICORP S.A.A.')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden p-1 shadow">
+                                    <span class="text-[9px] font-bold text-red-600">alicorp</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">ALICORC1</h4>
+                                    <span class="text-[10px] text-slate-400">Alicorp S.A.A.</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-white block">S/ 5.80</span>
+                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-caret-up"></i> +0.08%</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. Backus -->
+                        <div onclick="abrirCompraConDetalle('BACKUSI1', 22.40, 'UNIÓN DE CERVECERÍAS PERUANAS BACKUS Y JOHNSTON')" class="trii-card p-4 rounded-2xl border border-[#1f2c25] hover:border-emerald-500/40 transition cursor-pointer flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-slate-900 font-black text-[9px]"><i class="fa-solid fa-beer-mug-empty"></i></div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">BACKUSI1</h4>
+                                    <span class="text-[10px] text-slate-400">Cervecería Backus</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-white block">S/ 22.40</span>
+                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-caret-up"></i> +1.12%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUB-PÁGINA: FONDOS -->
+                    <div id="sub-fondos" class="hidden px-5 space-y-4">
+                        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Fondos Mutuos Blum</h3>
+                        <div class="trii-card p-4 rounded-2xl border border-[#1f2c25] flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold">B</div>
+                                <div>
+                                    <span class="text-xs font-bold text-white block">Blum Cash Soles</span>
+                                    <span class="text-[10px] text-slate-400">Fondo de liquidez de bajo riesgo</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-400">3.35% E.A.</span>
+                        </div>
+                        <div class="trii-card p-4 rounded-2xl border border-[#1f2c25] flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400 font-bold">B</div>
+                                <div>
+                                    <span class="text-xs font-bold text-white block">Blum Cash Dólares</span>
+                                    <span class="text-[10px] text-slate-400">Ideal para conservar efectivo en USD</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-emerald-400">3.74% E.A.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 
+                  ==============================================================
+                  PANTALLA C: FORMULARIO DE COMPRA (ORDEN DE TRANSACCIÓN)
+                  ==============================================================
+                -->
+                <div id="pantalla-compra" class="hidden flex-1 flex flex-col trii-app-bg pt-12 pb-6 overflow-y-auto no-scrollbar">
+                    
+                    <!-- Navegación superior de compra -->
+                    <div class="px-5 pt-3 flex items-center justify-between mb-4">
+                        <button onclick="cambiarTab('home')" class="text-white hover:text-emerald-400 transition text-sm">
+                            <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         
-                        <!-- Selector de Orden tipo badge (Como trii Compra mercado / Compra límite) -->
-                        <div onclick="openOrderTypeSelector()" class="flex items-center gap-1.5 bg-slate-900 border border-emerald-500/80 px-4 py-1.5 rounded-full text-xs font-semibold cursor-pointer text-emerald-400">
-                            <span id="badge-order-type">Compra mercado</span>
-                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        <!-- Selector de Tipo de Orden -->
+                        <div class="relative">
+                            <button onclick="abrirSelectorTipoOrden()" class="bg-[#141c18] border border-emerald-500 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-black flex items-center space-x-2">
+                                <span id="lbl-tipo-orden-actual">Compra mercado</span>
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </button>
                         </div>
 
-                        <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center">
-                            <i class="fa-solid fa-info text-xs text-slate-400"></i>
+                        <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] text-slate-300">
+                            i
                         </div>
                     </div>
 
-                    <!-- Información General del Activo -->
-                    <div class="text-center py-5">
-                        <div class="inline-flex items-center justify-center px-3 py-1 bg-slate-800 rounded-full text-[10px] font-bold text-sky-400 gap-1.5 mb-2 border border-slate-700">
-                            <span class="w-2 h-2 rounded-full bg-sky-400"></span> BCP
+                    <!-- Datos Generales de la Acción Dinámica -->
+                    <div class="px-5 text-center mb-4">
+                        <div class="inline-block bg-white text-slate-900 font-bold text-[10px] px-2.5 py-1 rounded-md mb-2" id="txt-compra-marca">
+                            BCP
                         </div>
-                        <h3 class="text-xs text-slate-500 font-bold uppercase tracking-wider">CREDITC1</h3>
-                        <h2 class="text-3xl font-extrabold tracking-tight mt-1">S/ 6.50</h2>
-
-                        <!-- Indicadores Mejor Compra / Mejor Venta -->
-                        <div class="grid grid-cols-2 gap-4 px-10 mt-4 text-xs">
-                            <div class="border-r border-slate-800 pr-2">
-                                <p class="text-slate-500">Mejor compra</p>
-                                <p class="font-bold text-slate-300 mt-0.5">S/ 6.48</p>
-                            </div>
-                            <div class="pl-2">
-                                <p class="text-slate-500">Mejor venta</p>
-                                <p class="font-bold text-slate-300 mt-0.5">S/ 6.50</p>
-                            </div>
+                        <h2 class="text-xs text-slate-400 font-bold tracking-wider" id="txt-compra-ticker">CREDITC1</h2>
+                        <span id="txt-compra-precio-actual" class="text-3xl font-black text-white">S/ 5.60</span>
+                        
+                        <!-- Libro de órdenes simplificado -->
+                        <div class="flex justify-center items-center space-x-4 mt-2 text-[10px]">
+                            <span class="text-slate-400">Mejor compra: <strong class="text-emerald-400" id="lbl-mejor-compra">S/ 5.58</strong></span>
+                            <span class="text-slate-400">Mejor venta: <strong class="text-rose-400" id="lbl-mejor-venta">S/ 5.60</strong></span>
                         </div>
 
-                        <!-- Enlace a Líneas de Profundidad -->
-                        <div onclick="toggleDepthSheet(true)" class="inline-flex items-center gap-1.5 mt-5 text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer font-medium bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/20 transition-all">
+                        <!-- Botón para ver las líneas de profundidad -->
+                        <button onclick="toggleProfundidad(true)" class="mt-3 text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center justify-center mx-auto space-x-1">
                             <i class="fa-solid fa-chart-simple"></i>
                             <span>Ver líneas de profundidad</span>
+                        </button>
+                    </div>
+
+                    <!-- Fila de Saldo Disponible -->
+                    <div class="px-5 mb-4">
+                        <div class="trii-card p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Saldo disponible</span>
+                            <span id="txt-compra-saldo-disponible" class="font-bold text-white">S/ 2,045.06</span>
                         </div>
                     </div>
 
-                    <!-- Campos de Entrada del Formulario de Orden -->
-                    <div class="px-5 py-3 space-y-4">
-                        <div class="flex justify-between items-center text-xs">
-                            <span class="text-slate-400">Saldo disponible</span>
-                            <span id="simulator-available-balance" class="font-bold">S/ 2,045.06</span>
-                        </div>
-
-                        <!-- Campo Precio Límite (Solo visible si es Orden Límite) -->
-                        <div id="field-limit-price" class="hidden">
-                            <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Precio límite</label>
+                    <!-- Formulario: Inputs de Compra -->
+                    <div class="px-5 space-y-4 mb-4">
+                        
+                        <!-- Campo de Precio Límite (Visible solo en orden Límite) -->
+                        <div id="campo-precio-limite" class="space-y-1">
+                            <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Precio límite (Soles)</label>
                             <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">S/</span>
-                                <input type="number" step="0.01" id="input-limit-price" oninput="calculateOrder()" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl py-3 pl-9 pr-4 text-sm font-bold focus:outline-none focus:border-emerald-500 text-white" value="6.50">
+                                <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm">S/</span>
+                                <input id="input-precio-limite" oninput="calcularComisiones()" type="number" step="0.01" value="5.60" class="w-full bg-[#141c18] border border-[#1f2c25] rounded-xl py-3 pl-10 pr-4 text-white text-sm font-bold focus:outline-none focus:border-emerald-500">
                             </div>
                         </div>
 
-                        <!-- Campo Número de Acciones -->
-                        <div>
-                            <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Número de acciones</label>
-                            <input type="number" step="1" id="input-shares" oninput="calculateOrder()" placeholder="0" class="w-full bg-slate-900/80 border border-slate-800 rounded-xl py-3 px-4 text-sm font-bold focus:outline-none focus:border-emerald-500 text-white">
+                        <!-- Campo de Número de Acciones -->
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Número de acciones</label>
+                            <input id="input-numero-acciones" oninput="calcularComisiones()" type="number" placeholder="0" class="w-full bg-[#141c18] border border-[#1f2c25] rounded-xl py-3 px-4 text-white text-sm font-bold focus:outline-none focus:border-emerald-500">
                         </div>
 
-                        <!-- Botón Agregar Cupón (Detalle visual de trii) -->
-                        <button class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-                            <i class="fa-solid fa-tag"></i> Agregar cupón
+                        <button class="text-emerald-400 hover:text-emerald-300 text-xs font-semibold flex items-center space-x-1.5">
+                            <i class="fa-solid fa-tag"></i>
+                            <span>Agregar cupón</span>
                         </button>
+                    </div>
 
-                        <!-- Bloque de Detalle y Comisión Autocalculada -->
-                        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 space-y-3.5">
-                            <div class="flex justify-between items-center cursor-pointer" onclick="toggleDetails()">
+                    <!-- Desglose de Comisión y Costo Total -->
+                    <div class="px-5 mb-6 mt-auto">
+                        <div class="trii-card rounded-2xl border border-[#1f2c25] overflow-hidden">
+                            <button onclick="toggleDesglose()" class="w-full p-4 flex justify-between items-center hover:bg-[#1c2722] transition">
                                 <div>
-                                    <p class="text-[10px] text-slate-500 font-bold uppercase">Total estimado, incluye comisión</p>
-                                    <p id="calc-total-preview" class="text-lg font-extrabold mt-0.5 text-emerald-400">S/ 12.50</p>
+                                    <span class="text-[10px] text-slate-400 block text-left uppercase font-bold">Total estimado, incluye comisión</span>
+                                    <span id="txt-calculo-total" class="text-lg font-black text-white block text-left">S/ 12.50</span>
                                 </div>
-                                <i id="icon-details" class="fa-solid fa-chevron-up text-slate-500 text-xs transition-transform"></i>
-                            </div>
+                                <i id="icono-desglose" class="fa-solid fa-chevron-up text-slate-400 text-xs"></i>
+                            </button>
 
-                            <!-- Desplegable Detalle de la Orden -->
-                            <div id="details-dropdown" class="space-y-2.5 pt-2 border-t border-slate-800 text-xs">
-                                <h4 class="font-bold text-slate-300">Detalle de tu orden</h4>
-                                
+                            <div id="cuerpo-desglose" class="px-4 pb-4 pt-1 border-t border-[#1f2c25] space-y-2.5 text-xs">
                                 <div class="flex justify-between text-slate-400">
                                     <span>Expiración de la orden</span>
-                                    <span id="calc-expiration" class="font-semibold text-white">Inmediata</span>
+                                    <span id="txt-desglose-expiracion" class="text-white font-semibold">Inmediata</span>
                                 </div>
                                 <div class="flex justify-between text-slate-400">
-                                    <span>Número de acciones</span>
-                                    <span id="calc-shares" class="font-semibold text-white">0.0</span>
+                                    <span>Monto por acciones</span>
+                                    <span id="txt-desglose-monto-acciones" class="text-white font-semibold">S/ 0.00</span>
                                 </div>
                                 <div class="flex justify-between text-slate-400">
-                                    <span>Comisión (Mínima)</span>
-                                    <span id="calc-commission" class="font-semibold text-white">S/ 12.50</span>
+                                    <span>Comisión fija (SAB + IGV)</span>
+                                    <span id="txt-desglose-comision" class="text-white font-semibold">S/ 12.50</span>
                                 </div>
-                                <div class="flex justify-between text-slate-400">
-                                    <span>IGV / Fondo de Garantía</span>
-                                    <span id="calc-taxes" class="font-semibold text-white">S/ 2.25</span>
-                                </div>
-                                <div class="flex justify-between pt-1 border-t border-slate-800 text-slate-400">
-                                    <span class="font-semibold">Subtotal Neto</span>
-                                    <span id="calc-subtotal" class="font-bold text-white">S/ 0.00</span>
+                                <div class="text-[10px] text-slate-500 leading-tight" id="txt-explicacion-comision">
+                                    * La comisión mínima es de S/ 12.50 más IGV. Para montos mayores se aplica el 0.65% del volumen negociado.
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Botón de Previsualizar Orden (Pie de Página) -->
-                    <div class="mt-auto p-4 bg-slate-950/40 sticky bottom-0 border-t border-slate-900/80">
-                        <button onclick="previewOrder()" id="btn-preview-order" class="w-full py-4 rounded-xl font-bold bg-slate-800 text-slate-500 cursor-not-allowed transition-all text-sm">
+                    <!-- Botón previsualizar que lleva a la pantalla intermedia de confirmación idéntica al video -->
+                    <div class="px-5">
+                        <button onclick="abrirPrevisualizarOrdenCompleto()" class="w-full trii-bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-3.5 rounded-full text-xs uppercase tracking-wider transition">
                             Previsualizar orden
                         </button>
                     </div>
+                </div>
 
-                    <!-- SHEETS (Capas de Fondo / Modales de iPhone) -->
+                <!-- 
+                  ==============================================================
+                  NUEVA PANTALLA: RESUMEN / "CREAR ORDEN DE" (IDÉNTICO AL VIDEO ADJUNTO)
+                  ==============================================================
+                -->
+                <div id="pantalla-resumen-confirmar" class="hidden flex-1 flex flex-col bg-[#141519] pt-12 pb-6 overflow-y-auto no-scrollbar text-center px-6">
+                    <!-- Icono de flecha volver -->
+                    <div class="text-left mb-6">
+                        <button onclick="cambiarTab('compra')" class="text-white hover:text-emerald-400 transition text-sm">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
 
-                    <!-- HOJA 1: LÍNEAS DE PROFUNDIDAD (photo_502414342351821591_y.jpg) -->
-                    <div id="depth-sheet-overlay" class="hidden absolute inset-0 bg-black/60 z-30 transition-opacity"></div>
-                    <div id="depth-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 h-[75%] bg-slate-950 rounded-t-[30px] border-t border-slate-800 z-40 flex flex-col overflow-hidden">
-                        <!-- Botón cerrar -->
-                        <div class="p-4 flex justify-between items-center border-b border-slate-900">
-                            <span class="text-sm font-extrabold tracking-tight">Líneas de profundidad</span>
-                            <button onclick="toggleDepthSheet(false)" class="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center hover:bg-slate-800">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
+                    <!-- Logo del activo circular -->
+                    <div class="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-6 overflow-hidden shadow-lg border border-slate-700">
+                        <span class="text-xs font-black text-slate-950" id="resumen-logo-texto">BCP</span>
+                    </div>
+
+                    <!-- Título dinámico "Crear orden de..." -->
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider block mb-2">Crear orden de</span>
+                    
+                    <!-- Cantidad de acciones en tamaño imponente, p.ej. "314.0 ACCIONES DE CREDITC1" -->
+                    <h1 class="text-2xl font-black text-white leading-tight px-4 mb-4 uppercase" id="resumen-cantidad-titulo">
+                        314.0 ACCIONES DE CREDITC1
+                    </h1>
+
+                    <!-- Detalle del precio por acción y tipo de orden -->
+                    <div class="mb-8">
+                        <p class="text-[13px] text-slate-400" id="resumen-tipo-orden-info">Compra mercado</p>
+                        <p class="text-md font-bold text-white mt-1" id="resumen-precio-pactado">S/ 5.6</p>
+                    </div>
+
+                    <!-- Total Estimado de inversión (incluye comisión) -->
+                    <div class="mb-8 border-t border-b border-slate-800/80 py-4">
+                        <span class="text-[13px] text-slate-400 block mb-1">Total estimado <span id="resumen-monto-total">S/ 1,770.90</span></span>
+                        <p class="text-xs text-slate-500" id="resumen-comision-info">Incluye S/ 12.5 de comisión</p>
+                    </div>
+
+                    <!-- Condiciones de la orden (Texto legal e instructivo del video) -->
+                    <div class="bg-[#1c1e24] p-4 rounded-2xl text-left mb-10 text-[11px] text-slate-400 space-y-2 leading-relaxed">
+                        <h4 class="font-bold text-slate-300 text-xs text-center mb-1">Condiciones de la orden</h4>
+                        <p>Se ejecutará al mejor precio disponible en el mercado.</p>
+                        <p>Puede calzar total, parcialmente o cancelarse, esto dependerá del movimiento de la acción en el mercado.</p>
+                    </div>
+
+                    <!-- Botón verde inferior de enviar / crear orden regulada -->
+                    <div class="mt-auto">
+                        <button onclick="confirmarYEjecutarOrdenFestejo()" class="w-full trii-bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-4 rounded-full text-xs uppercase tracking-widest transition">
+                            Crear orden
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 
+                  ==============================================================
+                  PANTALLA D: HISTORIAL DE MOVIMIENTOS (Mock)
+                  ==============================================================
+                -->
+                <div id="pantalla-movimientos" class="hidden flex-1 flex flex-col trii-app-bg pt-12 pb-24 overflow-y-auto no-scrollbar">
+                    <div class="px-5 pt-3 mb-4">
+                        <h2 class="text-lg font-bold text-white">Movimientos</h2>
+                        <span class="text-xs text-slate-400">Historial de transacciones de la cuenta</span>
+                    </div>
+                    <div class="px-5 space-y-3" id="lista-movimientos">
+                        <!-- Depósito Inicial -->
+                        <div class="trii-card p-4 rounded-xl border border-[#1f2c25] flex justify-between items-center">
+                            <div>
+                                <span class="text-xs font-bold text-white block">Abono PSE Recibido</span>
+                                <span class="text-[10px] text-slate-400">Depósito desde cuenta bancaria</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-emerald-400 block">+ S/ 3,646.66</span>
+                                <span class="text-[9px] text-slate-500">Completado</span>
+                            </div>
                         </div>
-                        <!-- Contenido Profundidad -->
-                        <div class="flex-grow p-4 overflow-y-auto custom-scroll text-[11px]">
-                            <!-- Resumen Mejor Compra/Venta -->
-                            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-900">
-                                <div>
-                                    <p class="text-slate-500">Mejor compra</p>
-                                    <div class="flex justify-between mt-1 text-xs">
-                                        <span class="font-bold text-emerald-400">S/ 6.48</span>
-                                        <span class="text-slate-400"><i class="fa-solid fa-chart-line"></i> 4,950</span>
-                                    </div>
-                                </div>
-                                <div class="border-l border-slate-900 pl-4">
-                                    <p class="text-slate-500">Mejor venta</p>
-                                    <div class="flex justify-between mt-1 text-xs">
-                                        <span class="text-slate-400"><i class="fa-solid fa-chart-line"></i> 23,530</span>
-                                        <span class="font-bold text-red-400">S/ 6.50</span>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+                </div>
 
-                            <!-- Tabla de Oferta y Demanda -->
-                            <div class="grid grid-cols-2 gap-x-6 mt-4">
-                                <!-- Columna Compras -->
-                                <div>
-                                    <div class="flex justify-between text-slate-500 font-bold mb-2">
-                                        <span>Cantidad</span>
-                                        <span>Compra</span>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between text-slate-300">
-                                            <span>4,950</span>
-                                            <span class="font-semibold">S/ 6.48</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-400">
-                                            <span>5,000</span>
-                                            <span>S/ 6.47</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-500">
-                                            <span>810</span>
-                                            <span>S/ 6.40</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-600">
-                                            <span>43</span>
-                                            <span>S/ 6.36</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Columna Ventas -->
-                                <div class="border-l border-slate-900 pl-6">
-                                    <div class="flex justify-between text-slate-500 font-bold mb-2">
-                                        <span>Venta</span>
-                                        <span>Cantidad</span>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between text-slate-300">
-                                            <span class="font-semibold">S/ 6.50</span>
-                                            <span>23,530</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-400">
-                                            <span>S/ 6.55</span>
-                                            <span>5,664</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-500">
-                                            <span>S/ 6.56</span>
-                                            <span>5,505</span>
-                                        </div>
-                                        <div class="flex justify-between text-slate-600">
-                                            <span>S/ 6.57</span>
-                                            <span>363</span>
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- 
+                  ==============================================================
+                  PANTALLA E: PORTAFOLIO EN DETALLE (Mock)
+                  ==============================================================
+                -->
+                <div id="pantalla-portafolio" class="hidden flex-1 flex flex-col trii-app-bg pt-12 pb-24 overflow-y-auto no-scrollbar">
+                    <div class="px-5 pt-3 mb-4">
+                        <h2 class="text-lg font-bold text-white">Mi Portafolio</h2>
+                        <span class="text-xs text-slate-400">Distribución de tus activos invertidos</span>
+                    </div>
+                    
+                    <div class="px-5 mb-4">
+                        <div class="bg-emerald-950/40 p-4 rounded-2xl border border-emerald-900/40 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Valor Actual</span>
+                                <span id="portafolio-valor-actual" class="text-xl font-bold text-white">S/ 1,601.60</span>
                             </div>
-                            
-                            <!-- Nota Pedagógica Breve -->
-                            <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 mt-6 text-[10px] text-slate-400 leading-relaxed">
-                                <p class="font-bold text-slate-300 mb-1 flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-info text-emerald-400"></i> ¿Qué representa esta tabla?
-                                </p>
-                                Muestra las órdenes límite registradas por otros inversionistas en la Bolsa. Las puntas de compra demandan acciones y las de venta ofrecen. El cruce inmediato ocurre cuando una orden de mercado impacta la mejor punta disponible.
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 block uppercase font-bold">Rentabilidad</span>
+                                <span class="text-xs text-emerald-400 font-bold">+0.31% (S/ 5.12)</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- HOJA 2: SELECCIONAR TIPO DE ORDEN (photo_502414342351821588_y.jpg) -->
-                    <div id="type-sheet-overlay" class="hidden absolute inset-0 bg-black/60 z-30 transition-opacity"></div>
-                    <div id="type-sheet" class="bottom-sheet absolute bottom-0 left-0 right-0 h-[60%] bg-slate-950 rounded-t-[30px] border-t border-slate-800 z-40 flex flex-col overflow-hidden">
-                        <div class="p-4 flex justify-between items-center border-b border-slate-900">
-                            <div>
-                                <h3 class="text-sm font-extrabold tracking-tight flex items-center gap-2">
-                                    Compra CREDITC1
-                                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] rounded-full font-bold">● Mercado Abierto</span>
-                                </h3>
-                                <p class="text-[10px] text-slate-500 mt-0.5">Selecciona el tipo de orden</p>
+                    <div class="px-5 space-y-3" id="lista-portafolio-activos">
+                        <!-- Activo Inicial -->
+                        <div class="trii-card p-4 rounded-xl border border-[#1f2c25] flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-[#002A8F] text-[10px]">BCP</div>
+                                <div>
+                                    <span class="text-xs font-bold text-white block">CREDITC1</span>
+                                    <span class="text-[10px] text-slate-400">246 acciones</span>
+                                </div>
                             </div>
-                            <button onclick="toggleTypeSheet(false)" class="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center hover:bg-slate-800">
-                                <i class="fa-solid fa-xmark text-xs"></i>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-white block">S/ 1,601.60</span>
+                                <span class="text-[9px] text-slate-400">Precio promedio: S/ 6.50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 
+                  ==============================================================
+                  PANTALLA F: CONFIRMACIÓN Y ANIMACIÓN DE CONFETI (IDÉNTICO AL VIDEO)
+                  Muestra el estallido festivo y cintas dinámicas para Cesar.
+                  ==============================================================
+                -->
+                <div id="pantalla-exito" class="hidden flex-1 flex flex-col bg-[#0b0e14] items-center justify-center p-6 text-center relative overflow-hidden">
+                    
+                    <!-- NUEVO: SVG dinámico de serpentinas/lazos curvados imitando la animación del video -->
+                    <svg class="ribbon-svg" viewBox="0 0 300 300" fill="none">
+                        <!-- Lazo magenta -->
+                        <path class="ribbon-path" d="M 20 180 Q 80 50, 150 150 T 280 80" stroke="#ff007f" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Lazo verde trii -->
+                        <path class="ribbon-path" d="M 50 250 Q 140 180, 100 80 T 250 220" stroke="#11ce65" stroke-width="4.5" stroke-linecap="round" style="animation-delay: 0.8s;"/>
+                        <!-- Lazo azul cian -->
+                        <path class="ribbon-path" d="M 10 50 Q 100 120, 200 40 T 290 260" stroke="#00d2ff" stroke-width="3" stroke-linecap="round" style="animation-delay: 1.5s;"/>
+                    </svg>
+
+                    <!-- Elemento Canvas para el estallido de confeti de colores -->
+                    <div id="confetti-container" class="absolute inset-0 pointer-events-none z-10"></div>
+
+                    <!-- Logo del activo circular de éxito -->
+                    <div class="w-24 h-24 rounded-full bg-white flex items-center justify-center mb-6 border border-slate-700 shadow-xl z-20">
+                        <span class="text-md font-black text-[#002A8F]" id="exito-logo-marca">BCP</span>
+                    </div>
+
+                    <!-- Título de felicitaciones dinámico, ej: "¡Felicidades Cesar!" -->
+                    <h2 class="text-lg font-bold text-white mb-2 z-20" id="txt-exito-felicitaciones">¡Felicidades Cesar!</h2>
+                    
+                    <p class="text-xs text-slate-400 block mb-1 z-20">Creaste una orden de</p>
+                    <h1 class="text-xl font-black text-white uppercase tracking-wide px-4 mb-4 z-20" id="txt-exito-empresa-nombre">
+                        BANCO CRÉDITO DEL PERÚ
+                    </h1>
+
+                    <!-- Logotipo sutil de trii en la confirmación -->
+                    <div class="flex items-center space-x-1 justify-center mb-10 z-20">
+                        <i class="fa-solid fa-tree text-emerald-400 text-xs"></i>
+                        <span class="text-xs font-black tracking-tight text-white">trii</span>
+                    </div>
+
+                    <!-- Botón para ver movimientos -->
+                    <button onclick="cambiarTab('movimientos')" class="w-full trii-bg-primary hover:bg-emerald-400 text-slate-900 font-bold py-3.5 rounded-full text-xs uppercase tracking-wider transition z-20 shadow-lg">
+                        Ver movimientos
+                    </button>
+                </div>
+
+                <!-- 
+                  ==============================================================
+                  NUEVO: BARRA DE NAVEGACIÓN INFERIOR PERSISTENTE (MODAL/TAB-BAR)
+                  Replicado exactamente según la imagen de referencia.
+                  ==============================================================
+                -->
+                <div id="bottom-nav-bar" class="absolute bottom-0 left-0 w-full bg-[#0d1310]/95 border-t border-[#1f2c25] pt-2 pb-6 px-4 flex justify-between items-center z-40">
+                    <!-- Tab Inicio -->
+                    <button onclick="cambiarTab('home')" id="tab-home" class="flex flex-col items-center flex-1 text-emerald-400 transition-colors">
+                        <i class="fa-solid fa-house text-md"></i>
+                        <span class="text-[9px] mt-1 font-medium">Inicio</span>
+                    </button>
+                    <!-- Tab Invertir -->
+                    <button onclick="cambiarTab('invertir')" id="tab-invertir" class="flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-chart-line text-md"></i>
+                        <span class="text-[9px] mt-1 font-medium">Invertir</span>
+                    </button>
+                    <!-- Central Float (Tree logo de trii) -->
+                    <div class="flex-1 flex justify-center -mt-6">
+                        <button onclick="cambiarTab('invertir')" class="w-11 h-11 bg-[#11ce65] text-slate-950 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform border-4 border-[#0d1310]">
+                            <i class="fa-solid fa-tree text-lg text-[#0d1310]"></i>
+                        </button>
+                    </div>
+                    <!-- Tab Movimientos -->
+                    <button onclick="cambiarTab('movimientos')" id="tab-movimientos" class="flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-arrow-right-arrow-left text-md"></i>
+                        <span class="text-[9px] mt-1 font-medium">Movimient...</span>
+                    </button>
+                    <!-- Tab Portafolio -->
+                    <button onclick="cambiarTab('portafolio')" id="tab-portafolio" class="flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-circle-notch text-md"></i>
+                        <span class="text-[9px] mt-1 font-medium">Portafolio</span>
+                    </button>
+                </div>
+
+                <!-- HOJA DESPLEGABLE DE PROFUNDIDAD DE MERCADO -->
+                <div id="modal-profundidad" class="hidden absolute inset-0 bg-black/60 z-50 flex flex-col justify-end">
+                    <div onclick="toggleProfundidad(false)" class="flex-1"></div>
+                    <div class="trii-card rounded-t-[30px] p-5 border-t border-[#1f2c25] max-h-[85%] overflow-y-auto no-scrollbar">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-md font-bold text-white">Líneas de profundidad</h3>
+                            <button onclick="toggleProfundidad(false)" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white hover:bg-slate-700">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
-                        
-                        <!-- Lista de Tipos de Orden -->
-                        <div class="p-4 space-y-3">
-                            <!-- Tipo Mercado -->
-                            <div onclick="selectOrderType('market')" class="p-3.5 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-2xl flex items-center justify-between cursor-pointer transition-colors group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
-                                        <i class="fa-solid fa-bolt"></i>
+
+                        <!-- Resumen comprador / vendedor -->
+                        <div class="grid grid-cols-2 gap-4 text-xs mb-4">
+                            <div class="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center">
+                                <span class="text-slate-400 block mb-1">Mejor compra</span>
+                                <span class="text-emerald-400 font-bold block text-sm">S/ 5.58</span>
+                                <span class="text-[10px] text-slate-400">Cantidad: 4,950</span>
+                            </div>
+                            <div class="bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 text-center">
+                                <span class="text-slate-400 block mb-1">Mejor venta</span>
+                                <span class="text-rose-400 font-bold block text-sm">S/ 5.60</span>
+                                <span class="text-[10px] text-slate-400">Cantidad: 23,530</span>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Ofertas -->
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-4 text-center text-[10px] text-slate-400 font-bold uppercase tracking-wider pb-2 border-b border-[#1f2c25]">
+                                <span>Cant. Compra</span>
+                                <span class="text-left">Compra</span>
+                                <span class="text-right">Venta</span>
+                                <span>Cant. Venta</span>
+                            </div>
+                            <div class="grid grid-cols-4 text-center text-xs font-semibold py-1">
+                                <span class="text-emerald-400">4,950</span>
+                                <span class="text-left text-white">S/ 5.58</span>
+                                <span class="text-right text-white">S/ 5.60</span>
+                                <span class="text-rose-400">23,530</span>
+                            </div>
+                            <div class="grid grid-cols-4 text-center text-xs font-semibold py-1">
+                                <span class="text-slate-400">5,000</span>
+                                <span class="text-left text-white">S/ 5.47</span>
+                                <span class="text-right text-white">S/ 5.65</span>
+                                <span class="text-slate-400">5,664</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOJA DESPLEGABLE: SELECCIÓN DE TIPO DE ORDEN -->
+                <div id="modal-tipo-orden" class="hidden absolute inset-0 bg-black/60 z-50 flex flex-col justify-end">
+                    <div onclick="cerrarSelectorTipoOrden()" class="flex-1"></div>
+                    <div class="trii-card rounded-t-[30px] p-5 border-t border-[#1f2c25]">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Compra de Valores</h3>
+                                <span class="text-[10px] text-slate-400">Selecciona el tipo de orden</span>
+                            </div>
+                            <button onclick="cerrarSelectorTipoOrden()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div onclick="seleccionarTipoOrden('Mercado')" class="p-4 rounded-2xl bg-slate-900/50 border border-[#1f2c25] hover:border-emerald-500 transition cursor-pointer flex justify-between items-center">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400">
+                                        <i class="fa-solid fa-bolt text-sm"></i>
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-bold text-white">Mercado</h4>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Realiza la operación al precio actual de mercado.</p>
+                                        <p class="text-[10px] text-slate-400 leading-snug">Realiza la operación al precio actual de mercado.</p>
                                     </div>
                                 </div>
-                                <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-emerald-400 transition-colors text-xs"></i>
+                                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                             </div>
 
-                            <!-- Tipo Límite -->
-                            <div onclick="selectOrderType('limit')" class="p-3.5 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-2xl flex items-center justify-between cursor-pointer transition-colors group">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
-                                        <i class="fa-solid fa-chart-line"></i>
+                            <div onclick="seleccionarTipoOrden('Limite')" class="p-4 rounded-2xl bg-slate-900/50 border border-[#1f2c25] hover:border-emerald-500 transition cursor-pointer flex justify-between items-center">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400">
+                                        <i class="fa-solid fa-sliders text-sm"></i>
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-bold text-white">Límite</h4>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Elige el precio en el que quieres que se realice la operación.</p>
+                                        <p class="text-[10px] text-slate-400 leading-snug">Elige el precio en el que quieres que se realice la operación.</p>
                                     </div>
                                 </div>
-                                <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-emerald-400 transition-colors text-xs"></i>
+                                <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- PANTALLA 3: PREVISUALIZAR Y CONFIRMAR ORDEN -->
-                <div id="screen-preview" class="hidden flex-grow flex flex-col h-full p-5 bg-slate-950">
-                    <div class="flex items-center mb-6">
-                        <button onclick="goToState('assetDetail')" class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center">
-                            <i class="fa-solid fa-chevron-left text-sm"></i>
-                        </button>
-                        <span class="text-sm font-bold ml-3">Revisar Orden</span>
-                    </div>
-
-                    <!-- Ficha Resumen -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Operación</span>
-                            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">COMPRA</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Activo</span>
-                            <span class="text-xs font-bold text-white">CREDITC1</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Tipo de Orden</span>
-                            <span id="preview-order-type" class="text-xs font-bold text-white">Mercado</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Cantidad</span>
-                            <span id="preview-shares" class="text-xs font-bold text-white">10</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Precio de Ejecución</span>
-                            <span id="preview-price" class="text-xs font-bold text-white">S/ 6.50</span>
-                        </div>
-                        <div class="border-t border-slate-800 pt-3 space-y-2">
-                            <div class="flex justify-between text-xs text-slate-400">
-                                <span>Subtotal</span>
-                                <span id="preview-subtotal">S/ 65.00</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-slate-400">
-                                <span>Comisión + IGV</span>
-                                <span id="preview-commissions">S/ 14.75</span>
-                            </div>
-                            <div class="flex justify-between text-xs font-extrabold text-white border-t border-slate-800 pt-2">
-                                <span>Costo Total Estimado</span>
-                                <span id="preview-total" class="text-emerald-400">S/ 79.75</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Protección Regulatoria Checkbox -->
-                    <div class="mt-4 p-3 bg-slate-900/50 border border-slate-800/80 rounded-xl flex items-start gap-2.5">
-                        <input type="checkbox" id="regulatory-check" onchange="toggleExecuteButton()" class="mt-0.5 rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
-                        <label for="regulatory-check" class="text-[10px] text-slate-400 leading-relaxed cursor-pointer">
-                            Entiendo que esta orden se ejecutará en la Bolsa de Valores de Lima a través de Kallpa SAB, una entidad regulada por la SMV, y que los valores se custodiarán en CAVALI.
-                        </label>
-                    </div>
-
-                    <!-- Botón Ejecutar -->
-                    <button id="btn-execute-order" onclick="executeOrder()" disabled class="w-full py-4 rounded-xl font-bold bg-slate-800 text-slate-500 cursor-not-allowed mt-auto transition-all text-sm">
-                        Confirmar y Enviar Orden
-                    </button>
-                </div>
-
-                <!-- PANTALLA 4: ÉXITO Y RECIBO -->
-                <div id="screen-success" class="hidden flex-grow flex flex-col h-full p-6 bg-slate-950 items-center justify-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-3xl mb-4 text-emerald-400 animate-bounce">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-
-                    <h2 class="text-xl font-extrabold text-white">¡Orden Recibida!</h2>
-                    <p class="text-xs text-slate-400 mt-2 max-w-[250px] leading-relaxed mx-auto">
-                        Tu orden ha sido enviada con éxito al corro de la Bolsa de Valores de Lima (BVL).
-                    </p>
-
-                    <!-- Detalle de Liquidación -->
-                    <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 my-6 text-xs text-left space-y-2.5">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">ID Operación</span>
-                            <span class="font-mono text-slate-300">#BVL-9840212</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Estado</span>
-                            <span class="text-emerald-400 font-bold">Liquidada (T+2)</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Acción</span>
-                            <span class="font-bold text-white">CREDITC1</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Cantidad Comprada</span>
-                            <span id="receipt-shares" class="font-bold text-white">10 acciones</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Total Descontado</span>
-                            <span id="receipt-total" class="font-extrabold text-emerald-400">S/ 79.75</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-emerald-950/20 p-3 rounded-xl border border-emerald-900/30 text-[10px] text-emerald-300/90 text-left leading-relaxed">
-                        <i class="fa-solid fa-clock"></i> <strong>Nota Regulada (T+2):</strong> Por regulación de la BVL y CAVALI, la liquidación física y financiera de las acciones toma 48 horas hábiles (T+2) para completarse formalmente en el registro de titularidad.
-                    </div>
-
-                    <button onclick="goToState('home')" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 rounded-xl font-bold text-xs tracking-wider uppercase mt-auto transition-colors">
-                        Regresar a Inicio
-                    </button>
-                </div>
-
-                <!-- MODAL: SIMULADOR DE DEPOSITO (Fondeo) -->
-                <div id="deposit-modal" class="hidden absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-6">
-                    <div class="bg-slate-900 border border-slate-800 w-full rounded-2xl p-5 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-building-columns text-emerald-400"></i> Depositar Soles</h3>
-                            <button onclick="closeDepositMock()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
-                        <p class="text-[11px] text-slate-400 leading-relaxed">
-                            Simula una transferencia bancaria (BCP, BBVA, Interbank) a tu cuenta recaudadora trii (Kallpa SAB).
-                        </p>
-                        <div>
-                            <label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Monto a depositar</label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">S/</span>
-                                <input type="number" id="deposit-amount" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-8 text-xs font-bold text-white focus:outline-none" value="1000">
-                            </div>
-                        </div>
-                        <button onclick="confirmDeposit()" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-colors">
-                            Completar Transferencia Bancaria
-                        </button>
+                <!-- Notificador de Alertas -->
+                <div id="alerta-simulador" class="hidden absolute top-12 left-4 right-4 bg-rose-950/90 border border-rose-800 p-3.5 rounded-2xl shadow-xl z-50 flex items-start space-x-3 transition">
+                    <i class="fa-solid fa-circle-exclamation text-rose-400 text-sm mt-0.5"></i>
+                    <div>
+                        <h4 class="text-xs font-bold text-white">Alerta de Simulación</h4>
+                        <p id="alerta-mensaje" class="text-[10px] text-rose-200 mt-1 leading-normal">Por favor revisa tus campos o saldo.</p>
                     </div>
                 </div>
 
+                <!-- Barra táctil de Inicio Ficticia de iOS -->
+                <div class="absolute bottom-1 w-28 h-1 bg-slate-700 rounded-full left-1/2 transform -translate-x-1/2 pointer-events-none"></div>
             </div>
         </div>
+
     </div>
 
-    <!-- COMPORTAMIENTO JAVASCRIPT DE LA APLICACIÓN -->
+    <!-- 
+      ======================================================================
+      BLOQUE 4: CONFIGURACIÓN DE VARIABLES Y LÓGICA DE NEGOCIO (JAVASCRIPT)
+      Aquí puedes editar de manera fácil los valores de simulación predeterminados.
+      ======================================================================
+    -->
     <script>
-        // ESTADO GLOBAL DEL SIMULADOR
-        let state = {
-            currency: 'Soles',
-            totalBalance: 3646.66,
-            availableBalance: 2045.06,
-            portfolioValue: 1601.60,
-            activeScreen: 'home',
-            orderType: 'market', // 'market' o 'limit'
-            sharesToBuy: 0,
-            limitPrice: 6.50,
-            commissionRate: 0.005, // 0.5% comision regulada tipica (minimo S/12.50)
-            minCommission: 12.50,
-            igvRate: 0.18 // 18% IGV Peru
-        };
+        // --- SECCIÓN EDITABLE: CONFIGURACIÓN DE ACTIVOS Y SALDOS ---
+        const CONFIG_SIMULADOR = {
+            // Comisiones de la SAB (Sociedad Agente de Bolsa)
+            comisionMinima: 12.50, // Comisión mínima requerida por la SAB (en Soles)
+            comisionPorcentual: 0.0065, // 0.65% de comisión para montos mayores
 
-        // RELACIONES PEDAGÓGICAS DEL DOCENTE
-        const pedagogicalSteps = {
-            'home': {
-                title: "1. Exploración de Portafolio & Fondeo",
-                desc: "Muestra a los alumnos la pantalla principal de un broker regulado en Perú (trii / SAB). Enseña la diferencia entre el saldo invertido y el 'Saldo Disponible' para comprar. Explica cómo la recarga de saldo se hace mediante transferencias bancarias locales (como BCP) asociadas al mismo titular.",
-                concept: "<strong>Sociedad Agente de Bolsa (SAB):</strong> El dinero del inversionista va a una cuenta del broker autorizada por la SMV (Superintendencia del Mercado de Valores). El depósito debe ser desde una cuenta del mismo titular para prevenir lavado de activos (regulación AML)."
-            },
-            'assetDetail': {
-                title: "2. La Ficha del Activo (Ticker CREDITC1)",
-                desc: "En este paso, el alumno busca el activo en la bolsa. Aquí puedes ver el precio en tiempo real (S/ 6.50), la Mejor Punta de Compra (Bid) y la de Venta (Ask). Esto permite introducir el concepto de liquidez y orden book.",
-                concept: "<strong>Mejor Compra y Mejor Venta (Spread):</strong> El spread es la diferencia de precio entre el que quiere vender más barato (S/ 6.50) y el que quiere comprar más caro (S/ 6.48). En mercados de baja liquidez, este spread puede ser amplio."
-            },
-            'orderType': {
-                title: "3. Selección del Tipo de Orden",
-                desc: "Invita a debatir entre elegir Orden Mercado u Orden Límite. La de Mercado prioriza velocidad (se ejecuta al instante con las ventas existentes), mientras que la Límite prioriza precio (se deja la orden esperando en la tabla de profundidad).",
-                concept: "<strong>Orden Límite vs Mercado:</strong> Una orden a Mercado consume la liquidez del libro de inmediato. Una orden Límite añade liquidez al libro y espera a ser calzada por otra contraparte."
-            },
-            'orderMarket': {
-                title: "4. Estructura de Costos y Comisión",
-                desc: "Haz que los alumnos ingresen un número de acciones bajo (ej. 10 acciones). Mostrarás cómo la comisión mínima (S/ 12.50 + IGV = S/ 14.75) castiga severamente las inversiones muy pequeñas. Es un gran aprendizaje financiero.",
-                concept: "<strong>Comisión Mínima:</strong> Las SAB reguladas cobran un costo operativo mínimo de custodia y corretaje para mantener la seguridad e intermediación bajo la SMV. Invertir capitales muy pequeños puede resultar ineficiente por el peso de la comisión."
-            },
-            'preview': {
-                title: "5. Revisión y Aceptación de Términos",
-                desc: "Muestra el paso final antes del envío. Aquí se consolida la transacción y se firma digitalmente la orden que se canalizará a la Bolsa de Valores de Lima (BVL) y se custodiará legalmente en CAVALI.",
-                concept: "<strong>CAVALI (I.C.L.V.):</strong> Es la Institución de Compensación y Liquidación de Valores. Es la encargada de registrar electrónicamente quién es el dueño real de las acciones, brindando máxima seguridad jurídica al inversionista retail."
-            },
-            'success': {
-                title: "6. Ejecución y Liquidación (T+2)",
-                desc: "¡La orden fue enviada y calzada con éxito! Ahora explícale a tus estudiantes por qué las acciones no se entregan al instante a nivel contable debido a la regla T+2 internacional.",
-                concept: "<strong>Regla de Liquidación T+2:</strong> Aunque el saldo se congela y ves el activo de inmediato en tu app, la transferencia formal de dinero y títulos ocurre exactamente 2 días hábiles después del trade."
+            // Monedas y saldos de partida
+            saldosIniciales: {
+                Soles: {
+                    total: 3646.66,
+                    disponible: 2045.06
+                },
+                Dolares: {
+                    total: 985.50,
+                    disponible: 552.70
+                }
             }
         };
 
-        // FUNCIONES DE CONTROL DE PANTALLA Y ESTADOS
-        function updateTeacherPanel() {
-            let key = state.activeScreen;
-            if (key === 'assetDetail') {
-                if (document.getElementById('details-dropdown').classList.contains('hidden')) {
-                    key = 'assetDetail';
-                } else {
-                    key = 'orderMarket';
-                }
-            }
-            const data = pedagogicalSteps[key];
-            if (data) {
-                document.getElementById('current-step-title').innerText = data.title;
-                document.getElementById('current-step-desc').innerText = data.desc;
-                document.getElementById('concept-text').innerHTML = data.concept;
+        // --- ESTADO ACTIVO DEL SIMULADOR ---
+        let divisaActual = "Soles"; 
+        let nombreAlumno = "Cesar"; // Por defecto Cesar, configurable por el docente
+        let saldoDisponible = CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+        let saldoInvertido = CONFIG_SIMULADOR.saldosIniciales.Soles.total - CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+        
+        // Estado del activo que se va a comprar
+        let activoActivo = {
+            ticker: "CREDITC1",
+            nombre: "BANCO CRÉDITO DEL PERÚ",
+            precio: 5.60,
+            marca: "BCP"
+        };
+
+        let tipoOrdenSeleccionada = "Mercado"; // "Mercado" o "Limite"
+        let desgloseAbierto = true;
+        let ocultarSaldo = false;
+
+        // Historial e Inversión del alumno
+        let transaccionesHistorial = [
+            { tipo: "Abono Recibido", descripcion: "Depósito inicial de práctica", monto: 3646.66, esCredito: true, fecha: "Hoy" }
+        ];
+        let portafolioActivos = [
+            { ticker: "CREDITC1", marca: "BCP", acciones: 246, costoPromedio: 5.60, valorTotal: 1377.60 }
+        ];
+
+        // Inicializamos la simulación
+        window.onload = function() {
+            recalcularPantallas();
+            actualizarReloj();
+            setInterval(actualizarReloj, 60000); 
+        };
+
+        function actualizarReloj() {
+            const ahora = new Date();
+            let horas = ahora.getHours();
+            let minutos = ahora.getMinutes();
+            if (minutos < 10) minutos = "0" + minutos;
+            document.getElementById('reloj-celular').innerText = horas + ":" + minutos;
+        }
+
+        // --- BLOQUE 5: CONTROLADOR DE PANTALLAS (SISTEMA DE TABS) ---
+        
+        // Función de compatibilidad heredada de versiones previas
+        function irAPantalla(pantallaId) {
+            cambiarTab(pantallaId);
+        }
+
+        // Función principal para cambiar de tab de manera fluida y nativa
+        function cambiarTab(tabName) {
+            // Ocultar todas las pantallas principales
+            document.getElementById('pantalla-home').classList.add('hidden');
+            document.getElementById('pantalla-invertir').classList.add('hidden');
+            document.getElementById('pantalla-compra').classList.add('hidden');
+            document.getElementById('pantalla-movimientos').classList.add('hidden');
+            document.getElementById('pantalla-portafolio').classList.add('hidden');
+            document.getElementById('pantalla-exito').classList.add('hidden');
+            document.getElementById('pantalla-resumen-confirmar').classList.add('hidden');
+
+            // Quitar color activo de todos los tabs de la barra inferior
+            document.getElementById('tab-home').className = "flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors";
+            document.getElementById('tab-invertir').className = "flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors";
+            document.getElementById('tab-movimientos').className = "flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors";
+            document.getElementById('tab-portafolio').className = "flex flex-col items-center flex-1 text-slate-400 hover:text-white transition-colors";
+
+            // Mostrar el tab correspondiente y activarlo visualmente
+            if (tabName === 'home') {
+                document.getElementById('pantalla-home').classList.remove('hidden');
+                document.getElementById('tab-home').className = "flex flex-col items-center flex-1 text-emerald-400 transition-colors";
+                document.getElementById('bottom-nav-bar').classList.remove('hidden');
+            } else if (tabName === 'invertir') {
+                document.getElementById('pantalla-invertir').classList.remove('hidden');
+                document.getElementById('tab-invertir').className = "flex flex-col items-center flex-1 text-emerald-400 transition-colors";
+                document.getElementById('bottom-nav-bar').classList.remove('hidden');
+                // Al entrar a Invertir, por defecto mostramos la pestaña de Descubre
+                cambiarSubPestaña('descubre');
+            } else if (tabName === 'movimientos') {
+                document.getElementById('pantalla-movimientos').classList.remove('hidden');
+                document.getElementById('tab-movimientos').className = "flex flex-col items-center flex-1 text-emerald-400 transition-colors";
+                document.getElementById('bottom-nav-bar').classList.remove('hidden');
+                renderizarMovimientos();
+            } else if (tabName === 'portafolio') {
+                document.getElementById('pantalla-portafolio').classList.remove('hidden');
+                document.getElementById('tab-portafolio').className = "flex flex-col items-center flex-1 text-emerald-400 transition-colors";
+                document.getElementById('bottom-nav-bar').classList.remove('hidden');
+                renderizarPortafolio();
+            } else if (tabName === 'compra') {
+                document.getElementById('pantalla-compra').classList.remove('hidden');
+                document.getElementById('bottom-nav-bar').classList.add('hidden');
+            } else if (tabName === 'resumen-confirmar') {
+                document.getElementById('pantalla-resumen-confirmar').classList.remove('hidden');
+                document.getElementById('bottom-nav-bar').classList.add('hidden');
+            } else if (tabName === 'exito') {
+                document.getElementById('pantalla-exito').classList.remove('hidden');
+                document.getElementById('bottom-nav-bar').classList.add('hidden');
             }
         }
 
-        function goToState(targetScreen) {
-            // Reset modal states
-            toggleDepthSheet(false);
-            toggleTypeSheet(false);
-            closeDepositMock();
+        // Cambiar entre sub-pestañas dentro de la pantalla Invertir (Descubre / Acciones / Fondos)
+        function cambiarSubPestaña(sub) {
+            document.getElementById('sub-descubre').classList.add('hidden');
+            document.getElementById('sub-acciones').classList.add('hidden');
+            document.getElementById('sub-fondos').classList.add('hidden');
 
-            // Hide all screens
-            document.getElementById('screen-home').classList.add('hidden');
-            document.getElementById('screen-detail').classList.add('hidden');
-            document.getElementById('screen-preview').classList.add('hidden');
-            document.getElementById('screen-success').classList.add('hidden');
+            document.getElementById('pestaña-descubre').className = "pb-2 text-slate-400 hover:text-white transition w-1/3 text-center";
+            document.getElementById('pestaña-acciones').className = "pb-2 text-slate-400 hover:text-white transition w-1/3 text-center";
+            document.getElementById('pestaña-fondos').className = "pb-2 text-slate-400 hover:text-white transition w-1/3 text-center";
 
-            // Show current
-            if (targetScreen === 'home') {
-                document.getElementById('screen-home').classList.remove('hidden');
-                state.activeScreen = 'home';
-            } else if (targetScreen === 'assetDetail') {
-                document.getElementById('screen-detail').classList.remove('hidden');
-                state.activeScreen = 'assetDetail';
-                calculateOrder();
-            } else if (targetScreen === 'orderType') {
-                document.getElementById('screen-detail').classList.remove('hidden');
-                state.activeScreen = 'assetDetail';
-                toggleTypeSheet(true);
-            } else if (targetScreen === 'orderMarket') {
-                document.getElementById('screen-detail').classList.remove('hidden');
-                state.activeScreen = 'assetDetail';
-                // Asegurar que el acordeón de detalles esté abierto para mostrar los números
-                document.getElementById('details-dropdown').classList.remove('hidden');
-                document.getElementById('icon-details').classList.remove('rotate-180');
-                calculateOrder();
-            } else if (targetScreen === 'preview') {
-                document.getElementById('screen-preview').classList.remove('hidden');
-                state.activeScreen = 'preview';
-                populatePreviewScreen();
-            } else if (targetScreen === 'success') {
-                document.getElementById('screen-success').classList.remove('hidden');
-                state.activeScreen = 'success';
-                populateSuccessReceipt();
+            if (sub === 'descubre') {
+                document.getElementById('sub-descubre').classList.remove('hidden');
+                document.getElementById('pestaña-descubre').className = "pb-2 border-b-2 border-emerald-400 text-white font-bold w-1/3 text-center";
+            } else if (sub === 'acciones') {
+                document.getElementById('sub-acciones').classList.remove('hidden');
+                document.getElementById('pestaña-acciones').className = "pb-2 border-b-2 border-emerald-400 text-white font-bold w-1/3 text-center";
+            } else if (sub === 'fondos') {
+                document.getElementById('sub-fondos').classList.remove('hidden');
+                document.getElementById('pestaña-fondos').className = "pb-2 border-b-2 border-emerald-400 text-white font-bold w-1/3 text-center";
             }
-
-            updateTeacherPanel();
         }
 
-        // SWAP MONEDAS
-        function switchCurrency(type) {
-            state.currency = type;
-            const btnSoles = document.getElementById('btn-currency-soles');
-            const btnDolares = document.getElementById('btn-currency-dolares');
+        // Abre el formulario con cualquier activo de la lista
+        function abrirCompraConDetalle(ticker, precio, nombre) {
+            activoActivo.ticker = ticker;
+            activoActivo.precio = precio;
+            activoActivo.nombre = nombre;
             
-            if (type === 'Soles') {
-                btnSoles.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-slate-950 transition-colors";
-                btnDolares.className = "px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 transition-colors";
-                
-                document.getElementById('home-total-balance').innerText = "S/ 3,646.66";
-                document.getElementById('home-available-balance').innerText = "S/ 2,045.06";
-                document.getElementById('home-portfolio-value').innerText = "S/ 1,601.60";
-            } else {
-                btnSoles.className = "px-4 py-1.5 rounded-full text-xs font-semibold text-slate-400 transition-colors";
-                btnDolares.className = "px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-slate-950 transition-colors";
-                
-                // Conversión aproximada para demostración
-                document.getElementById('home-total-balance').innerText = "$ 985.58";
-                document.getElementById('home-available-balance').innerText = "$ 552.71";
-                document.getElementById('home-portfolio-value').innerText = "$ 432.86";
-            }
-        }
+            // Asignar marca correspondiente
+            if (ticker === 'AUNA') activoActivo.marca = 'AUNA';
+            else if (ticker === 'FERREYC1') activoActivo.marca = 'FERREYCORP';
+            else if (ticker === 'ALICORC1') activoActivo.marca = 'ALICORP';
+            else if (ticker === 'BBVAC1') activoActivo.marca = 'BBVA';
+            else if (ticker === 'BACKUSI1') activoActivo.marca = 'BACKUS';
+            else activoActivo.marca = 'BCP';
 
-        // CONTROL DE ACORDEÓN DE DETALLES
-        function toggleDetails() {
-            const dropdown = document.getElementById('details-dropdown');
-            const icon = document.getElementById('icon-details');
-            dropdown.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
-            updateTeacherPanel();
-        }
-
-        // TOGGLE MODALES
-        function toggleDepthSheet(show) {
-            const sheet = document.getElementById('depth-sheet');
-            const overlay = document.getElementById('depth-sheet-overlay');
-            if (show) {
-                overlay.classList.remove('hidden');
-                setTimeout(() => sheet.classList.add('active'), 10);
-            } else {
-                sheet.classList.remove('active');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
-        }
-
-        function toggleTypeSheet(show) {
-            const sheet = document.getElementById('type-sheet');
-            const overlay = document.getElementById('type-sheet-overlay');
-            if (show) {
-                overlay.classList.remove('hidden');
-                setTimeout(() => sheet.classList.add('active'), 10);
-            } else {
-                sheet.classList.remove('active');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-            }
-        }
-
-        function selectOrderType(type) {
-            state.orderType = type;
-            const badge = document.getElementById('badge-order-type');
-            const limitField = document.getElementById('field-limit-price');
-            const expText = document.getElementById('calc-expiration');
-
-            if (type === 'market') {
-                badge.innerText = 'Compra mercado';
-                limitField.classList.add('hidden');
-                expText.innerText = 'Inmediata';
-            } else {
-                badge.innerText = 'Compra límite';
-                limitField.classList.remove('hidden');
-                expText.innerText = '5 días';
-            }
-
-            toggleTypeSheet(false);
-            calculateOrder();
-        }
-
-        // CALCULADORA DE COMISIONES (Mismo comportamiento que trii/SABs)
-        function calculateOrder() {
-            const sharesInput = document.getElementById('input-shares');
-            const sharesVal = parseInt(sharesInput.value) || 0;
-            state.sharesToBuy = sharesVal;
-
-            let price = 6.50; // Precio mercado por defecto
-            if (state.orderType === 'limit') {
-                const limitPriceInput = document.getElementById('input-limit-price');
-                price = parseFloat(limitPriceInput.value) || 6.50;
-                state.limitPrice = price;
-            }
-
-            // Subtotal
-            const subtotal = sharesVal * price;
-
-            // Comisión: 0.5% del monto o Comisión Mínima de S/ 12.50
-            let commBase = subtotal * state.commissionRate;
-            let isMinimum = false;
+            // Actualizar interfaz del formulario
+            document.getElementById('txt-compra-marca').innerText = activoActivo.marca;
+            document.getElementById('txt-compra-ticker').innerText = activoActivo.ticker;
+            document.getElementById('txt-compra-precio-actual').innerText = (divisaActual === "Soles" ? "S/ " : "U$ ") + activoActivo.precio.toFixed(2);
+            document.getElementById('lbl-mejor-compra').innerText = (divisaActual === "Soles" ? "S/ " : "U$ ") + (activoActivo.precio - 0.02).toFixed(2);
+            document.getElementById('lbl-mejor-venta').innerText = (divisaActual === "Soles" ? "S/ " : "U$ ") + activoActivo.precio.toFixed(2);
             
-            if (sharesVal > 0 && commBase < state.minCommission) {
-                commBase = state.minCommission;
-                isMinimum = true;
-            } else if (sharesVal === 0) {
-                commBase = 0;
+            document.getElementById('input-precio-limite').value = activoActivo.precio.toFixed(2);
+            document.getElementById('input-numero-acciones').value = "";
+
+            cambiarTab('compra');
+            seleccionarTipoOrden('Mercado');
+        }
+
+        // --- NUEVO: PREVISUALIZAR ORDEN INTERMEDIA (SEGÚN EL VIDEO DE REFERENCIA) ---
+        function abrirPrevisualizarOrdenCompleto() {
+            const calculo = calcularComisiones();
+
+            if (calculo.acciones <= 0) {
+                mostrarAlerta("Ingresa un número válido de acciones a comprar.");
+                return;
             }
 
-            // IGV sobre la comisión
-            const igv = commBase * state.igvRate;
-            const totalCommissions = commBase + igv;
-            const finalTotal = subtotal + totalCommissions;
+            if (calculo.total > saldoDisponible) {
+                mostrarAlerta(`No tienes saldo suficiente. Necesitas ${(divisaActual === "Soles" ? "S/ " : "U$ ")}${calculo.total.toFixed(2)}.`);
+                return;
+            }
 
-            // Actualizar interfaz del teléfono
-            document.getElementById('calc-shares').innerText = sharesVal.toFixed(1);
-            document.getElementById('calc-commission').innerText = `S/ ${commBase.toFixed(2)} ${isMinimum && sharesVal > 0 ? '(Mínima)' : ''}`;
-            document.getElementById('calc-taxes').innerText = `S/ ${igv.toFixed(2)}`;
-            document.getElementById('calc-subtotal').innerText = `S/ ${subtotal.toFixed(2)}`;
+            // Actualizar interfaz de la pantalla de confirmación intermedia
+            document.getElementById('resumen-logo-texto').innerText = activoActivo.marca;
+            document.getElementById('resumen-cantidad-titulo').innerText = `${calculo.acciones.toFixed(1)} ACCIONES DE ${activoActivo.ticker}`;
             
-            if (sharesVal > 0) {
-                document.getElementById('calc-total-preview').innerText = `S/ ${finalTotal.toFixed(2)}`;
-                
-                // Validar saldo para habilitar botón
-                const btnPreview = document.getElementById('btn-preview-order');
-                if (finalTotal <= state.availableBalance) {
-                    btnPreview.className = "w-full py-4 rounded-xl font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-600 transition-colors cursor-pointer text-sm";
-                    btnPreview.disabled = false;
-                } else {
-                    // Mensaje de saldo insuficiente
-                    btnPreview.className = "w-full py-4 rounded-xl font-bold bg-red-950 text-red-400 border border-red-900/40 cursor-not-allowed text-sm text-center";
-                    btnPreview.innerHTML = "Saldo Insuficiente";
-                    btnPreview.disabled = true;
-                }
-            } else {
-                document.getElementById('calc-total-preview').innerText = "S/ 12.50";
-                const btnPreview = document.getElementById('btn-preview-order');
-                btnPreview.className = "w-full py-4 rounded-xl font-bold bg-slate-800 text-slate-500 cursor-not-allowed text-sm";
-                btnPreview.innerHTML = "Previsualizar orden";
-                btnPreview.disabled = true;
-            }
-
-            document.getElementById('simulator-available-balance').innerText = `S/ ${state.availableBalance.toFixed(2)}`;
-        }
-
-        // CARGAR DATOS EN PANTALLA REVISAR ORDEN
-        function populatePreviewScreen() {
-            let price = state.orderType === 'market' ? 6.50 : state.limitPrice;
-            const subtotal = state.sharesToBuy * price;
-            let commBase = subtotal * state.commissionRate;
-            if (commBase < state.minCommission) {
-                commBase = state.minCommission;
-            }
-            const igv = commBase * state.igvRate;
-            const totalComms = commBase + igv;
-            const finalTotal = subtotal + totalComms;
-
-            document.getElementById('preview-order-type').innerText = state.orderType === 'market' ? 'Mercado' : 'Límite';
-            document.getElementById('preview-shares').innerText = state.sharesToBuy;
-            document.getElementById('preview-price').innerText = `S/ ${price.toFixed(2)}`;
-            document.getElementById('preview-subtotal').innerText = `S/ ${subtotal.toFixed(2)}`;
-            document.getElementById('preview-commissions').innerText = `S/ ${totalComms.toFixed(2)}`;
-            document.getElementById('preview-total').innerText = `S/ ${finalTotal.toFixed(2)}`;
+            const tipoOrdenTexto = tipoOrdenSeleccionada === 'Mercado' ? 'Compra mercado' : 'Compra límite';
+            document.getElementById('resumen-tipo-orden-info').innerText = tipoOrdenTexto;
             
-            // Desmarcar checkbox regulatorio
-            document.getElementById('regulatory-check').checked = false;
-            toggleExecuteButton();
+            const simbolo = divisaActual === "Soles" ? "S/ " : "U$ ";
+            document.getElementById('resumen-precio-pactado').innerText = simbolo + calculo.precio.toFixed(2);
+            document.getElementById('resumen-monto-total').innerText = simbolo + calculo.total.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('resumen-comision-info').innerText = `Incluye ${simbolo}${calculo.comision.toFixed(1)} de comisión`;
+
+            cambiarTab('resumen-confirmar');
         }
 
-        // HABILITAR BOTÓN POR CHECKBOX REGULATORIO
-        function toggleExecuteButton() {
-            const check = document.getElementById('regulatory-check');
-            const btn = document.getElementById('btn-execute-order');
-            if (check.checked) {
-                btn.className = "w-full py-4 rounded-xl font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-600 transition-all cursor-pointer text-sm mt-auto";
-                btn.disabled = false;
+        // --- CONFIRMAR ORDEN Y DISPARAR FESTEJO / CONFETI DE CÉSAR ---
+        function confirmarYEjecutarOrdenFestejo() {
+            const calculo = calcularComisiones();
+
+            // Realizar débito financiero
+            saldoDisponible -= calculo.total;
+            saldoInvertido += calculo.montoAcciones;
+            recalcularPantallas();
+
+            // Rellenar datos en la pantalla de éxito final festiva
+            document.getElementById('exito-logo-marca').innerText = activoActivo.marca;
+            document.getElementById('txt-exito-felicitaciones').innerText = `¡Felicidades ${nombreAlumno}!`;
+            document.getElementById('txt-exito-empresa-nombre').innerText = activoActivo.nombre;
+
+            // Registrar en historial de movimientos para auditoría en clase
+            transaccionesHistorial.unshift({
+                tipo: "Compra Ejecutada",
+                descripcion: `Compra de ${calculo.acciones} acciones de ${activoActivo.ticker}`,
+                monto: calculo.total,
+                esCredito: false,
+                fecha: "Hace un momento"
+            });
+
+            // Registrar o acumular en el portafolio
+            let existe = portafolioActivos.find(x => x.ticker === activoActivo.ticker);
+            if (existe) {
+                existe.acciones += calculo.acciones;
+                existe.valorTotal += calculo.montoAcciones;
             } else {
-                btn.className = "w-full py-4 rounded-xl font-bold bg-slate-800 text-slate-500 cursor-not-allowed mt-auto transition-all text-sm";
-                btn.disabled = true;
+                portafolioActivos.push({
+                    ticker: activoActivo.ticker,
+                    marca: activoActivo.marca,
+                    acciones: calculo.acciones,
+                    costoPromedio: calculo.precio,
+                    valorTotal: calculo.montoAcciones
+                });
+            }
+
+            // Cambiar a pantalla de éxito e iniciar animación festiva de confeti
+            cambiarTab('exito');
+            dispararConfeti();
+        }
+
+        // Genera la lluvia festiva de confeti de colores
+        function dispararConfeti() {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = ""; // Limpiamos estallidos anteriores
+            const colores = ['#11ce65', '#00d2ff', '#ff007f', '#ffc107', '#9c27b0', '#e91e63'];
+
+            // Creamos 60 piezas de confeti flotantes
+            for (let i = 0; i < 60; i++) {
+                const pieza = document.createElement('div');
+                pieza.className = 'confetti-piece';
+                pieza.style.left = Math.random() * 100 + '%';
+                pieza.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+                pieza.style.animationDelay = Math.random() * 2 + 's';
+                pieza.style.transform = `rotate(${Math.random() * 360}deg)`;
+                container.appendChild(pieza);
             }
         }
 
-        // EJECUTAR COMPRA
-        function executeOrder() {
-            let price = state.orderType === 'market' ? 6.50 : state.limitPrice;
-            const subtotal = state.sharesToBuy * price;
-            let commBase = subtotal * state.commissionRate;
-            if (commBase < state.minCommission) {
-                commBase = state.minCommission;
-            }
-            const igv = commBase * state.igvRate;
-            const finalTotal = subtotal + commBase + igv;
-
-            // Actualizar saldos globales tras el descuento
-            state.availableBalance -= finalTotal;
-            state.portfolioValue += subtotal; // Sumamos el valor del activo al portafolio
-            state.totalBalance = state.availableBalance + state.portfolioValue;
-
-            // Actualizar pantallas
-            document.getElementById('home-total-balance').innerText = `S/ ${state.totalBalance.toFixed(2)}`;
-            document.getElementById('home-available-balance').innerText = `S/ ${state.availableBalance.toFixed(2)}`;
-            document.getElementById('home-portfolio-value').innerText = `S/ ${state.portfolioValue.toFixed(2)}`;
-
-            goToState('success');
+        // Sincroniza el nombre del alumno escrito por el docente en el panel izquierdo
+        function actualizarNombreAlumno() {
+            const inputNom = document.getElementById('profesor-nombre-alumno');
+            nombreAlumno = inputNom.value.trim() || "Cesar";
         }
 
-        function populateSuccessReceipt() {
-            let price = state.orderType === 'market' ? 6.50 : state.limitPrice;
-            const subtotal = state.sharesToBuy * price;
-            let commBase = subtotal * state.commissionRate;
-            if (commBase < state.minCommission) {
-                commBase = state.minCommission;
-            }
-            const igv = commBase * state.igvRate;
-            const finalTotal = subtotal + commBase + igv;
+        // --- BLOQUE 6: CÁLCULOS Y SISTEMA DE TRANSACCIONES ---
 
-            document.getElementById('receipt-shares').innerText = `${state.sharesToBuy} acciones`;
-            document.getElementById('receipt-total').innerText = `S/ ${finalTotal.toFixed(2)}`;
-        }
+        // Alternar saldo visible/oculto
+        function toggleOcultarSaldo() {
+            ocultarSaldo = !ocultarSaldo;
+            const balanceTotalEl = document.getElementById('txt-balance-total');
+            const balanceDispEl = document.getElementById('txt-balance-disponible');
+            const valorAccionesEl = document.getElementById('txt-valor-acciones');
+            const iconoOjo = document.getElementById('icono-ojo-saldo');
 
-        function previewOrder() {
-            goToState('preview');
-        }
-
-        // GESTIÓN DE MODAL DE DEPOSITOS
-        function openDepositMock() {
-            document.getElementById('deposit-modal').classList.remove('hidden');
-        }
-
-        function closeDepositMock() {
-            document.getElementById('deposit-modal').classList.add('hidden');
-        }
-
-        function confirmDeposit() {
-            const amountInput = document.getElementById('deposit-amount');
-            const amount = parseFloat(amountInput.value) || 0;
-
-            if (amount > 0) {
-                state.availableBalance += amount;
-                state.totalBalance += amount;
-
-                document.getElementById('home-total-balance').innerText = `S/ ${state.totalBalance.toFixed(2)}`;
-                document.getElementById('home-available-balance').innerText = `S/ ${state.availableBalance.toFixed(2)}`;
-                document.getElementById('simulator-available-balance').innerText = `S/ ${state.availableBalance.toFixed(2)}`;
-                
-                closeDepositMock();
-                alert(`¡Fondeo exitoso! Se han depositado S/ ${amount.toFixed(2)} simulando la pasarela de recargas de la app regulada.`);
-                calculateOrder();
+            if (ocultarSaldo) {
+                balanceTotalEl.innerText = "S/ ••••••";
+                balanceDispEl.innerText = "S/ ••••••";
+                valorAccionesEl.innerText = "S/ ••••••";
+                iconoOjo.className = "fa-solid fa-eye-slash text-sm";
+            } else {
+                iconoOjo.className = "fa-solid fa-eye text-sm";
+                recalcularPantallas();
             }
         }
 
-        // REINICIAR TODO EL SIMULADOR
-        function resetSimulator() {
-            state = {
-                currency: 'Soles',
-                totalBalance: 3646.66,
-                availableBalance: 2045.06,
-                portfolioValue: 1601.60,
-                activeScreen: 'home',
-                orderType: 'market',
-                sharesToBuy: 0,
-                limitPrice: 6.50,
-                commissionRate: 0.005,
-                minCommission: 12.50,
-                igvRate: 0.18
+        // Cambiar divisa global
+        function cambiarDivisa(nuevaDivisa) {
+            divisaActual = nuevaDivisa;
+            const btnSoles = document.getElementById('btn-divisa-soles');
+            const btnDolares = document.getElementById('btn-divisa-dolares');
+
+            if (divisaActual === "Soles") {
+                btnSoles.className = "w-1/2 py-1.5 rounded-full text-xs font-bold bg-emerald-500 text-slate-900 transition";
+                btnDolares.className = "w-1/2 py-1.5 rounded-full text-xs font-bold text-slate-400 transition";
+                saldoDisponible = CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+                saldoInvertido = CONFIG_SIMULADOR.saldosIniciales.Soles.total - CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+            } else {
+                btnSoles.className = "w-1/2 py-1.5 rounded-full text-xs font-bold text-slate-400 transition";
+                btnDolares.className = "w-1/2 py-1.5 rounded-full text-xs font-bold bg-emerald-500 text-slate-900 transition";
+                saldoDisponible = CONFIG_SIMULADOR.saldosIniciales.Dolares.disponible;
+                saldoInvertido = CONFIG_SIMULADOR.saldosIniciales.Dolares.total - CONFIG_SIMULADOR.saldosIniciales.Dolares.disponible;
+            }
+
+            recalcularPantallas();
+            calcularComisiones();
+        }
+
+        // Recalcular montos de las pantallas
+        function recalcularPantallas() {
+            if (ocultarSaldo) return;
+            const simbolo = divisaActual === "Soles" ? "S/ " : "U$ ";
+            const total = saldoDisponible + saldoInvertido;
+
+            document.getElementById('txt-balance-total').innerText = simbolo + total.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('txt-balance-disponible').innerText = simbolo + saldoDisponible.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('txt-valor-acciones').innerText = simbolo + saldoInvertido.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('txt-compra-saldo-disponible').innerText = simbolo + saldoDisponible.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function abrirSelectorTipoOrden() {
+            document.getElementById('modal-tipo-orden').classList.remove('hidden');
+        }
+        function cerrarSelectorTipoOrden() {
+            document.getElementById('modal-tipo-orden').classList.add('hidden');
+        }
+
+        function seleccionarTipoOrden(tipo) {
+            tipoOrdenSeleccionada = tipo;
+            const campoPrecio = document.getElementById('campo-precio-limite');
+            const lblTipo = document.getElementById('lbl-tipo-orden-actual');
+            const txtExpiracion = document.getElementById('txt-desglose-expiracion');
+
+            if (tipo === 'Mercado') {
+                campoPrecio.classList.add('hidden');
+                lblTipo.innerText = "Compra mercado";
+                txtExpiracion.innerText = "Inmediata";
+            } else {
+                campoPrecio.classList.remove('hidden');
+                lblTipo.innerText = "Compra límite";
+                txtExpiracion.innerText = "5 días";
+            }
+
+            cerrarSelectorTipoOrden();
+            calcularComisiones();
+        }
+
+        function toggleProfundidad(mostrar) {
+            const modal = document.getElementById('modal-profundidad');
+            if (mostrar) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        // Abre y cierra el acordeón del desglose de comisión
+        function toggleDesglose() {
+            desgloseAbierto = !desgloseAbierto;
+            const cuerpo = document.getElementById('cuerpo-desglose');
+            const icono = document.getElementById('icono-desglose');
+
+            if (desgloseAbierto) {
+                cuerpo.classList.remove('hidden');
+                icono.className = "fa-solid fa-chevron-up text-slate-400 text-xs";
+            } else {
+                cuerpo.classList.add('hidden');
+                icono.className = "fa-solid fa-chevron-down text-slate-400 text-xs";
+            }
+        }
+
+        // Calcular Comisiones
+        function calcularComisiones() {
+            const inputAccionesVal = document.getElementById('input-numero-acciones').value;
+            const numeroAcciones = parseInt(inputAccionesVal) || 0;
+            
+            let precioAccion = activoActivo.precio;
+            if (tipoOrdenSeleccionada === 'Limite') {
+                const inputPrecioVal = document.getElementById('input-precio-limite').value;
+                precioAccion = parseFloat(inputPrecioVal) || 0;
+            }
+
+            const montoPorAcciones = numeroAcciones * precioAccion;
+            let comisionSAB = CONFIG_SIMULADOR.comisionMinima;
+            
+            if (montoPorAcciones * CONFIG_SIMULADOR.comisionPorcentual > CONFIG_SIMULADOR.comisionMinima) {
+                comisionSAB = montoPorAcciones * CONFIG_SIMULADOR.comisionPorcentual;
+            }
+
+            let totalEstimado = 0;
+            if (numeroAcciones > 0) {
+                totalEstimado = montoPorAcciones + comisionSAB;
+            } else {
+                totalEstimado = comisionSAB;
+            }
+
+            const simbolo = divisaActual === "Soles" ? "S/ " : "U$ ";
+            document.getElementById('txt-calculo-total').innerText = simbolo + totalEstimado.toFixed(2);
+            document.getElementById('txt-desglose-monto-acciones').innerText = simbolo + montoPorAcciones.toFixed(2);
+            document.getElementById('txt-desglose-comision').innerText = simbolo + comisionSAB.toFixed(2);
+
+            return {
+                total: totalEstimado,
+                montoAcciones: montoPorAcciones,
+                comision: comisionSAB,
+                precio: precioAccion,
+                acciones: numeroAcciones
             };
+        }
 
-            // Reset inputs
-            document.getElementById('input-shares').value = '';
-            document.getElementById('input-limit-price').value = '6.50';
+        // Renderizar el historial de movimientos
+        function renderizarMovimientos() {
+            const container = document.getElementById('lista-movimientos');
+            container.innerHTML = "";
+            transaccionesHistorial.forEach(t => {
+                const colorMonto = t.esCredito ? "text-emerald-400" : "text-rose-400";
+                const signo = t.esCredito ? "+" : "-";
+                const simbolo = divisaActual === "Soles" ? "S/ " : "U$ ";
+                
+                container.innerHTML += `
+                    <div class="trii-card p-4 rounded-xl border border-[#1f2c25] flex justify-between items-center">
+                        <div>
+                            <span class="text-xs font-bold text-white block">${t.tipo}</span>
+                            <span class="text-[10px] text-slate-400">${t.descripcion}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold ${colorMonto} block">${signo} ${simbolo}${t.monto.toFixed(2)}</span>
+                            <span class="text-[9px] text-slate-500">${t.fecha}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Renderizar activos en portafolio
+        function renderizarPortafolio() {
+            const container = document.getElementById('lista-portafolio-activos');
+            container.innerHTML = "";
+            let sumaTotal = 0;
+
+            portafolioActivos.forEach(a => {
+                const simbolo = divisaActual === "Soles" ? "S/ " : "U$ ";
+                sumaTotal += a.valorTotal;
+                
+                container.innerHTML += `
+                    <div class="trii-card p-4 rounded-xl border border-[#1f2c25] flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-black text-slate-900 text-[10px]">${a.marca.substring(0, 3)}</div>
+                            <div>
+                                <span class="text-xs font-bold text-white block">${a.ticker}</span>
+                                <span class="text-[10px] text-slate-400">${a.acciones} acciones</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-white block">${simbolo}${a.valorTotal.toFixed(2)}</span>
+                            <span class="text-[9px] text-slate-400">Prom: ${simbolo}${a.costoPromedio.toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('portafolio-valor-actual').innerText = (divisaActual === "Soles" ? "S/ " : "U$ ") + sumaTotal.toFixed(2);
+        }
+
+        // Resetear simulador
+        function reiniciarSimulador() {
+            divisaActual = "Soles";
+            saldoDisponible = CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+            saldoInvertido = CONFIG_SIMULADOR.saldosIniciales.Soles.total - CONFIG_SIMULADOR.saldosIniciales.Soles.disponible;
+            tipoOrdenSeleccionada = "Mercado";
+            ocultarSaldo = false;
             
-            // Switch back to Soles
-            switchCurrency('Soles');
+            transaccionesHistorial = [
+                { tipo: "Abono Recibido", descripcion: "Depósito inicial de práctica", monto: 3646.66, esCredito: true, fecha: "Hoy" }
+            ];
+            portafolioActivos = [
+                { ticker: "CREDITC1", marca: "BCP", acciones: 246, costoPromedio: 5.60, valorTotal: 1377.60 }
+            ];
 
-            // Reset visual balances
-            document.getElementById('home-total-balance').innerText = "S/ 3,646.66";
-            document.getElementById('home-available-balance').innerText = "S/ 2,045.06";
-            document.getElementById('home-portfolio-value').innerText = "S/ 1,601.60";
+            document.getElementById('input-numero-acciones').value = "";
+            document.getElementById('input-precio-limite').value = "5.60";
 
-            goToState('home');
-        }
-
-        // RELOJ DINÁMICO EN EL IPHONE
-        function startIphoneClock() {
-            const clockEl = document.getElementById('iphone-time');
-            setInterval(() => {
-                const now = new Date();
-                let hours = now.getHours();
-                let minutes = now.getMinutes();
-                hours = hours < 10 ? '0' + hours : hours;
-                minutes = minutes < 10 ? '0' + minutes : minutes;
-                clockEl.innerText = `${hours}:${minutes}`;
-            }, 1000);
-        }
-
-        // EJECUCIÓN INICIAL AL CARGAR
-        window.onload = function () {
-            startIphoneClock();
-            updateTeacherPanel();
+            cambiarDivisa("Soles");
+            cambiarTab('home');
         }
     </script>
 </body>
